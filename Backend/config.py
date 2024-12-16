@@ -1,1 +1,1 @@
-TOKEN="sossoso"
+TOKEN="soss"
