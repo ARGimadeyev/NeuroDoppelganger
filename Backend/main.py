@@ -31,18 +31,18 @@ async def add(_id_: int, message: types.Message):
 
 async def forGPT(m: types.Message):
     send = "написал(а)"
-    if m.reply_to_message != None:
-        send = f"ответил(а) {m.reply_to_message.from_user.full_name}"
+    if m.reply_to_message is not None:
+        send = f"ответил(а) на сообщение {m.reply_to_message.from_user.full_name}"
     if m.content_type == ContentType.TEXT:
-        return m.text + f" {send} {m.from_user.full_name}"
+        return f"{m.from_user.full_name} {send}: " + m.text
     if m.caption == "":
         ans = f"{m.from_user.full_name} отправил(а) {m.content_type}"
         if m.content_type == ContentType.STICKER:
             ans += f"({m.sticker.emoji})"
         return ans
-    ans = f'"{m.caption}", {send} {m.from_user.full_name}'
+    ans = f'{m.from_user.full_name} {send}: "{m.caption}"'
     if m.content_type != ContentType.TEXT:
-        ans += f" и {send} {m.content_type}"
+        ans += f" и прикрепил(а) {m.content_type}"
         if m.content_type == ContentType.STICKER:
             ans += f"({m.sticker.emoji})"
     return str(ans)
@@ -82,7 +82,7 @@ async def UpdateReplic(message: types.Message, indx: int):
 @dp.message(Command('newbot'))
 async def newbot(message: types.Message):
     user_data[message.from_user.id] = 0
-    await message.answer_photo(photo=ImportHistory[0], caption=dialogsHistory[0],reply_markup=await get_keyboard(0))
+    await message.answer_photo(photo=ImportHistory[0], caption=dialogsHistory[0], reply_markup=await get_keyboard(0))
 
 
 @dp.callback_query(NumbersCallbackFactory.filter())
@@ -109,6 +109,7 @@ async def top100(message: types.Message):
         await message.answer(ans)
     else:
         await message.answer("ПУСТО")
+
 
 @dp.message(F.document)
 async def read(message: types.Message):
