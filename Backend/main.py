@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from collections import deque
+from email.message import Message
 from typing import Optional
 
 from aiogram import Bot, Dispatcher, types
@@ -120,10 +121,15 @@ async def read(message: types.Message):
     file = await bot.get_file(message.document.file_id)  # Получаем информацию о файле
     file_stream = await bot.download_file(file.file_path)  # Загружаем содержимое файла в память
 
+    # file_extension = file_stream.name.split(".")[-1]
+    if file_extension != "json": return
     # Читаем содержимое файла
     try:
         data = file_stream.read().decode('utf-8')  # Декодируем файл как текст
-        print(data)  # Для проверки выводим содержимое
+        for i in data:
+            m = Message(*i)
+            print(m)
+        # Для проверки выводим содержимое
         await message.answer("Файл успешно обработан!")
     except Exception as e:
         await message.answer(f"Произошла ошибка при чтении файла: {e}")
