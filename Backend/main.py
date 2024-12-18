@@ -122,7 +122,7 @@ async def read(message: types.Message):
     file_stream = await bot.download_file(file.file_path)  # Загружаем содержимое файла в память
 
     # file_extension = file_stream.name.split(".")[-1]
-    if file_extension != "json": return
+    # if file_extension != "json": return
     # Читаем содержимое файла
     try:
         data = file_stream.read().decode('utf-8')  # Декодируем файл как текст
