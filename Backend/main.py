@@ -33,16 +33,20 @@ async def forGPT(m: types.Message):
     send = "написал(а)"
     if m.reply_to_message is not None:
         send = f"ответил(а) на сообщение {m.reply_to_message.from_user.full_name}"
+
     if m.content_type == ContentType.TEXT:
         return f"{m.from_user.full_name} {send}: " + m.text
+
     if m.caption == "":
-        ans = f"{m.from_user.full_name} отправил(а) {m.content_type}"
+        if send == "написал(а)": send = "отправил(а)"
+        ans = f"{m.from_user.full_name} {send} {str(m.content_type)[:12]}"
         if m.content_type == ContentType.STICKER:
             ans += f"({m.sticker.emoji})"
         return ans
+
     ans = f'{m.from_user.full_name} {send}: "{m.caption}"'
     if m.content_type != ContentType.TEXT:
-        ans += f" и прикрепил(а) {m.content_type}"
+        ans += f" и прикрепил(а) {str(m.content_type)[12:]}"
         if m.content_type == ContentType.STICKER:
             ans += f"({m.sticker.emoji})"
     return str(ans)
