@@ -5,7 +5,7 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import FSInputFile, InputMediaPhoto, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from config import TOKEN, dialogsHistory
+from config import TOKEN, dialogsHistory,LENdialoges
 
 import logging, asyncio
 from aiogram import Bot, Dispatcher, types
@@ -73,7 +73,7 @@ async def get_keyboard(indx: int):
     keyboard = InlineKeyboardBuilder()
     col = 1
     keyboard.button(text="Назад", callback_data=NumbersCallbackFactory(action='history_back', value=-1))
-    if indx < 3:
+    if indx < LENdialoges - 1:
         col += 1
         keyboard.button(text="Дальше", callback_data=NumbersCallbackFactory(action='history_next', value=1))
     keyboard.adjust(col)
@@ -116,6 +116,19 @@ async def top100(message: types.Message):
     else:
         await message.answer("ПУСТО")
 
+@dp.message(F.document)
+async def read(message: types.Message):
+    file = await bot.get_file(message.document.file_id)  # Получаем информацию о файле
+    file_stream = await bot.download_file(file.file_path)  # Загружаем содержимое файла в память
+
+    # Читаем содержимое файла
+    try:
+        data = file_stream.read().decode('utf-8')  # Декодируем файл как текст
+        print(data)  # Для проверки выводим содержимое
+        await message.answer("Файл успешно обработан!")
+    except Exception as e:
+        await message.answer(f"Произошла ошибка при чтении файла: {e}")
+
 
 @dp.message()
 async def parse(message: types.Message):
@@ -127,7 +140,7 @@ async def main():
 
 
 def load():
-    for i in range(4):
+    for i in range(LENdialoges):
         ImportHistory.append(FSInputFile(f"ImportHistory/_{i}.png"))
 
 
