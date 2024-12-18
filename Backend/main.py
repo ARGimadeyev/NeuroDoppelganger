@@ -1,24 +1,18 @@
+import asyncio
+import logging
 from collections import deque
-from urllib.parse import ParseResult
-from aiogram.enums import ParseMode, ContentType
+from typing import Optional
+
+from aiogram import Bot, Dispatcher, types
+from aiogram import F
+from aiogram.enums import ContentType
 from aiogram.filters.callback_data import CallbackData
-from aiogram.types import FSInputFile, InputMediaPhoto, InlineKeyboardMarkup
+from aiogram.filters.command import Command
+from aiogram.types import FSInputFile, \
+    InputMediaPhoto
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from config import TOKEN, dialogsHistory,LENdialoges
-
-import logging, asyncio
-from aiogram import Bot, Dispatcher, types
-from aiogram.filters.command import Command
-
-from aiogram.enums.parse_mode import ParseMode
-from aiogram.client.default import DefaultBotProperties
-from aiogram.types import InlineKeyboardButton, FSInputFile, \
-    InputMediaPhoto
-from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
-from aiogram import F
-
-from typing import Optional
+from config import TOKEN, dialogsHistory, LENdialoges
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)

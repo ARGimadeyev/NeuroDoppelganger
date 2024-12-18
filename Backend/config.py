@@ -1,4 +1,8 @@
-TOKEN = "######"
+import os
+from dotenv import load_dotenv
+
+load_dotenv(".env")
+TOKEN = os.getenv("TOKEN")
 
 dialogsHistory = [
     '''Экспорт чатов доступен только через Telegram Desktop на компьютере. Скачать Telegram Desktop можно с официального сайта.''',
