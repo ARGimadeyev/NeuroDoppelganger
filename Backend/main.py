@@ -13,7 +13,7 @@ from aiogram.types import FSInputFile, \
     InputMediaPhoto
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from Backend.config import TOKEN, dialogsHistory, LENdialoges
+from config import TOKEN, dialogsHistory, LENdialoges
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
