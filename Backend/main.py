@@ -31,9 +31,9 @@ async def add(_id_: int, message: types.Message):
 
 
 async def forGPT(m: types.Message):
-    if m.text != None:
+    if m.text is not None:
         return f"{m.from_user.username}: {m.text}"
-    if m.caption != None:
+    if m.caption is not None:
         return f"{m.from_user.username}: {m.caption}"
     if m.content_type == ContentType.STICKER:
         return f"{m.from_user.username}: {m.sticker.emoji}"
@@ -91,22 +91,6 @@ async def history(call: types.CallbackQuery, callback_data: NumbersCallbackFacto
         await UpdateReplic(call.message, user_data[call.from_user.id])
 
 
-@dp.message(Command('top'))
-async def top100(message: types.Message):
-    await message.reply(f"id:{message.chat.id}")
-    ans = ""
-    if message.chat.id in context:
-        for a in context[message.chat.id]:
-            ans += await forGPT(a)
-            ans += '\n'
-        await message.answer(ans)
-    else:
-        await message.answer("ПУСТО")
-
-
-arr = []
-
-
 @dp.message(F.document)
 async def read(message: types.Message):
     file = await bot.get_file(message.document.file_id)  # Получаем информацию о файле
@@ -117,17 +101,11 @@ async def read(message: types.Message):
     try:
         data = file_stream.read().decode('utf-8')
         data = json.loads(data)
-        groupName = data.get("name")
-        for message in data["messages"]:
-            if message['type'] != 'message' or (
-                    type(message['text']) != str and 'sticker_emoji' not in message): continue
-            if 'sticker_emoji' not in message:
-                if message['text'] == "": continue
-                print(message['from_id'] + ': ' + message['text'])
-            else:
-                print(message['from_id'] + ': ' + message['sticker_emoji'])
+        groupName = data.get("id")
+        print(groupName)
+        await message.answer("Все ок) Переписка обрабатывается")
     except:
-        await message.answer(f"Произошла ошибка при чтении файла:(")
+        await message.answer("Произошла ошибка при чтении файла:(")
 
 
 @dp.message()
