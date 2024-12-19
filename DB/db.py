@@ -1,22 +1,12 @@
 import json
 import psycopg2
-import asyncio
-import logging
-from collections import deque
-from email.message import Message
-from typing import Optional
-
-from aiogram import Bot, Dispatcher, types
-from aiogram import F
-from aiogram.enums import ContentType
-from aiogram.filters.callback_data import CallbackData
-from aiogram.filters.command import Command
-from aiogram.types import FSInputFile, \
-    InputMediaPhoto
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 conn = psycopg2.connect(
-
+        host=HOST,
+        database=DATABASE,
+        user=USER,
+        password=PASSWORD,
+        port=PORT
 )
 
 with open('result.json', 'r', encoding='utf-8') as f:
