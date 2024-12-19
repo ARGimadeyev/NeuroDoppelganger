@@ -1,7 +1,7 @@
 import asyncio
+import json
 import logging
 from collections import deque
-from email.message import Message
 from typing import Optional
 
 from aiogram import Bot, Dispatcher, types
@@ -31,30 +31,18 @@ async def add(_id_: int, message: types.Message):
 
 
 async def forGPT(m: types.Message):
-    send = "написал(а)"
-    if m.reply_to_message is not None:
-        send = f"ответил(а) на сообщение {m.reply_to_message.from_user.full_name}"
-
-    if m.content_type == ContentType.TEXT:
-        return f"{m.from_user.full_name} {send}: " + m.text
-
-    if m.caption == "":
-        if send == "написал(а)": send = "отправил(а)"
-        ans = f"{m.from_user.full_name} {send} {str(m.content_type)[:12]}"
-        if m.content_type == ContentType.STICKER:
-            ans += f"({m.sticker.emoji})"
-        return ans
-
-    ans = f'{m.from_user.full_name} {send}: "{m.caption}"'
-    if m.content_type != ContentType.TEXT:
-        ans += f" и прикрепил(а) {str(m.content_type)[12:]}"
-        if m.content_type == ContentType.STICKER:
-            ans += f"({m.sticker.emoji})"
-    return str(ans)
+    if m.text != None:
+        return f"{m.from_user.username}: {m.text}"
+    if m.caption != None:
+        return f"{m.from_user.username}: {m.caption}"
+    if m.content_type == ContentType.STICKER:
+        return f"{m.from_user.username}: {m.sticker.emoji}"
+    return ""
 
 
 @dp.message(Command('start'))
 async def start(message: types.Message):
+    await message.answer(str(message.from_user.id))
     await message.reply(
         f"Привет, {message.from_user.full_name}!\nЧтобы создать своего нейродвойника для чата напишите /newbot")
 
@@ -116,23 +104,30 @@ async def top100(message: types.Message):
         await message.answer("ПУСТО")
 
 
+arr = []
+
+
 @dp.message(F.document)
 async def read(message: types.Message):
     file = await bot.get_file(message.document.file_id)  # Получаем информацию о файле
     file_stream = await bot.download_file(file.file_path)  # Загружаем содержимое файла в память
 
-    # file_extension = file_stream.name.split(".")[-1]
-    # if file_extension != "json": return
-    # Читаем содержимое файла
+    file_extension = file.file_path.split(".")[-1]
+    if file_extension != "json": return
     try:
-        data = file_stream.read().decode('utf-8')  # Декодируем файл как текст
-        for i in data:
-            m = Message(*i)
-            print(m)
-        # Для проверки выводим содержимое
-        await message.answer("Файл успешно обработан!")
-    except Exception as e:
-        await message.answer(f"Произошла ошибка при чтении файла: {e}")
+        data = file_stream.read().decode('utf-8')
+        data = json.loads(data)
+        groupName = data.get("name")
+        for message in data["messages"]:
+            if message['type'] != 'message' or (
+                    type(message['text']) != str and 'sticker_emoji' not in message): continue
+            if 'sticker_emoji' not in message:
+                if message['text'] == "": continue
+                print(message['from_id'] + ': ' + message['text'])
+            else:
+                print(message['from_id'] + ': ' + message['sticker_emoji'])
+    except:
+        await message.answer(f"Произошла ошибка при чтении файла:(")
 
 
 @dp.message()
