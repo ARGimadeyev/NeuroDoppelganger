@@ -12,3 +12,8 @@ dialogsHistory = [
 ]
 
 LENdialoges = 4
+
+# ML parameters
+MIN_MESSAGE_THRESHOLD = 10
+MAX_MESSAGE_DELAY = 120
+WINDOW_SIZE = 50
