@@ -2,7 +2,7 @@ from datetime import datetime
 from collections import deque
 from DB.db import get_messages
 from Backend.config import MIN_MESSAGE_THRESHOLD, WINDOW_SIZE, MAX_MESSAGE_DELAY
-
+import asyncio
 
 def add_case(window: deque, result: list, chat: list, by_id: dict) -> None:
     case = dict()
@@ -19,7 +19,7 @@ def add_case(window: deque, result: list, chat: list, by_id: dict) -> None:
 
 
 def get_dataset(chat_id: int) -> list:
-    chat = get_messages(chat_id)
+    chat = asyncio.run(get_messages(chat_id))
     modified_chat = list()
     by_id = dict()
     for message in chat:
