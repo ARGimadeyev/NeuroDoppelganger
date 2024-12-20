@@ -1,8 +1,13 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv("../.env")
+load_dotenv("C:/Users/galimka_xxx/NeuroDoppelganger/datas.env")
 TOKEN = os.getenv("BOT_TOKEN")
+HOST= os.getenv("HOST")
+DATABASE= os.getenv("DATABASE")
+USER = os.getenv("USER_52")
+PASSWORD = os.getenv("PASSWORD")
+PORT= os.getenv("PORT")
 
 dialogsHistory = [
     '''Экспорт чатов доступен только через Telegram Desktop на компьютере. Скачать Telegram Desktop можно с официального сайта.''',

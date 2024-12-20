@@ -14,6 +14,7 @@ from aiogram.types import FSInputFile, \
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from Backend.config import TOKEN, dialogsHistory, LENdialoges
+from DB.db import add_chat
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
@@ -100,9 +101,11 @@ async def read(message: types.Message):
     if file_extension != "json": return
     try:
         data = file_stream.read().decode('utf-8')
+        asyncio.run(add_chat(data))
         data = json.loads(data)
-        groupName = data.get("id")
-        print(groupName)
+        groupName = data.get("name")
+        groupID = data.get("id")
+        print(groupName, groupID)
         await message.answer("Все ок) Переписка обрабатывается")
     except:
         await message.answer("Произошла ошибка при чтении файла:(")

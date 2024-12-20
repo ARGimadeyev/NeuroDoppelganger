@@ -1,25 +1,15 @@
-import json
 import psycopg2
-import asyncio
-import logging
-from collections import deque
-from email.message import Message
-from typing import Optional
-
-from aiogram import Bot, Dispatcher, types
-from aiogram import F
-from aiogram.enums import ContentType
-from aiogram.filters.callback_data import CallbackData
-from aiogram.filters.command import Command
-from aiogram.types import FSInputFile, \
-    InputMediaPhoto
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram import Bot
+from Backend.config import HOST, DATABASE, USER, PASSWORD, PORT
 
 COLchats = 100
 
 conn = psycopg2.connect(
-
+    host=HOST,
+    database=DATABASE,
+    user=USER,
+    password=PASSWORD,
+    port=PORT,
+    target_session_attrs="read-write"
 )
 
 cur = conn.cursor()

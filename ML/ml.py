@@ -22,8 +22,8 @@ async def create_dataset(path_to_requests):
     )
 
     operation = await dataset_draft.upload()
-    dataset = operation
-    return dataset.id
+    dataset = await operation
+    return dataset
 
 
 def tune_model(dataset_id, temperature, max_tokens) -> str:
@@ -45,16 +45,29 @@ def run_model(model_uri: str, prompt: str):
 
 
 def add_model(chat_id: int, temperature=None, max_tokens=None):
-    dataset = get_dataset(chat_id)
+    pass
+    # dataset = get_dataset(chat_id)
+    # print(dataset)
+    # with open("data_to_train/train.jsonlines", "w", encoding="utf-8") as f:
+    #     for request in dataset:
+    #         f.write(f"{request}\n")
 
-    with open("data_to_train/train.jsonlines", "w", encoding="utf-8") as f:
-        for request in dataset:
-            f.write(f"{request}\n")
+    # dataset = asyncio.run(create_dataset(local_path("data_to_train/train.jsonlines")))
+    # dataset_id = dataset.id
+    # dataset_status = dataset.status
+    #
+    # print(dataset_status)
+    # for dataset in sdk.datasets.list():
+    #     print(dataset)
+    #
+    # print(dataset_id)
+    # model_id = tune_model(dataset_id, temperature, max_tokens)
 
-    dataset_id = asyncio.run(create_dataset(local_path("data_to_train/train.jsonlines")))
-    model_id = tune_model(dataset_id, temperature, max_tokens)
-
-    return model_id
+    # return model_id
 
 if __name__ == "__main__":
-    print(add_model(4637831705))
+    pass
+    # for dataset in sdk.datasets.list():
+    #     dataset.delete()
+
+    # print(add_model(2434120063))
