@@ -16,9 +16,20 @@ from aiogram.types import FSInputFile, \
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram import Bot
 from torch.ao.ns.fx.weight_utils import get_conv_mod_weight
+from dotenv import load_dotenv
+import sys
+import os
+sys.path.append("..")
+
+load_dotenv("../.env")
 
 conn = psycopg2.connect(
-
+    host=os.getenv("HOST"),
+    database=os.getenv("DATABASE"),
+    user=os.getenv("USER_52"),
+    password=os.getenv("PASSWORD"),
+    port=os.getenv("PORT"),
+    target_session_attrs="read-write"
 )
 
 cur = conn.cursor()
@@ -108,5 +119,6 @@ def get_messages(chat_id):
         b["mes_date"] = row[7]
         res.append(b)
     return res
+
 
 conn.commit()

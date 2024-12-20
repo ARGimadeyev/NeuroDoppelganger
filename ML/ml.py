@@ -51,7 +51,10 @@ def add_model(chat_id: int, temperature=None, max_tokens=None):
         for request in dataset:
             f.write(f"{request}\n")
 
-    dataset_id = create_dataset(local_path("data_to_train/train.jsonlines"))
+    # dataset_id = create_dataset(local_path("data_to_train/train.jsonlines"))
+    #
+    # model_id = tune_model(dataset_id, temperature, max_tokens)
+    # return model_id
 
-    model_id = tune_model(dataset_id, temperature, max_tokens)
-    return model_id
+if __name__ == "__main__":
+    add_model(1592127213)
