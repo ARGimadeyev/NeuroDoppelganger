@@ -10,7 +10,7 @@ def add_case(window: deque, result: list, chat: list, by_id: dict) -> None:
             f"Твоя задача - ответить от лица {window[WINDOW_SIZE - 1]["full_name"]}, полностью копируя его манеру речи")
     case["request"] = [{"role": "system", "text": task}]
     for i in range(0, WINDOW_SIZE - 1):
-        case["request"].append({"role": window[i]["full_name"], "text": window[i]["text"]})
+        case["request"].append({"role": window[i]["full_name"], "text": window[i]["mes_text"]})
         if window[i]["id_reply"]:
             txt = f"[Ответ на сообщение {chat[by_id[window[i]["id_reply"]]]}] {case["request"][-1]["text"]}"
             case["request"][-1]["text"] = txt
@@ -26,7 +26,7 @@ def get_dataset(chat_id: int) -> list:
         if modified_chat and message["full_name"] == modified_chat[-1]["full_name"] and not message["id_reply"]:
             if datetime.timestamp(message["mes_date"]) - datetime.timestamp(
                     modified_chat[-1]["mes_date"]) <= MAX_MESSAGE_DELAY:
-                modified_chat[-1]["text"] += f"\n{message["mes_text"]}"
+                modified_chat[-1]["mes_text"] += f"\n{message["mes_text"]}"
                 modified_chat[-1]["mes_date"] = message["mes_date"]
                 by_id[message["id"]] = len(modified_chat) - 1
                 continue
