@@ -1,6 +1,6 @@
 from datetime import datetime
 from collections import deque
-from DB.function import get_chat
+from DB.db import get_messages
 from Backend.config import MIN_MESSAGE_THRESHOLD, WINDOW_SIZE, MAX_MESSAGE_DELAY
 
 
@@ -19,7 +19,7 @@ def add_case(window: deque, result: list, chat: list, by_id: dict) -> None:
 
 
 def get_dataset(chat_path: str) -> list:
-    chat = get_chat(chat_path)
+    chat = get_messages(chat_path)
     modified_chat = list()
     by_id = dict()
     for message in chat:
