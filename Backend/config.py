@@ -6,3 +6,5 @@ dialogsHistory = [
 ]
 
 LENdialoges = 4
+
+COLchats = 100

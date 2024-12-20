@@ -13,7 +13,7 @@ from aiogram.types import FSInputFile, \
     InputMediaPhoto
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from config import dialogsHistory, LENdialoges
+from config import dialogsHistory, LENdialoges, COLchats
 from tqdm import tqdm
 from dotenv import load_dotenv
 
@@ -140,12 +140,29 @@ def add_mess(chat_id, messages):
                 f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{b}', {id_reply}, '{mes['date']}')")
 
 
+def in_db(chat_id):
+    cur.execute(f"select *from get_model_id where chat_id = '{chat_id}'")
+    res = cur.fetchall()
+    return len(res)
+
+
+def count_db(chat_id):
+    if in_db(chat_id):
+        cur.execute(f"select count(*) from i{chat_id}")
+        res = cur.fetchall()
+        return res[0][0]
+    return 0
+
+
 async def add_chat(new_chat, model_id: str):
-    cur.execute()
     cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, {model_id})")
-    cur.execute(
-        f"create table i{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
-    add_mess(str(new_chat['id']), new_chat['messages'])
+
+    if in_db(str(new_chat['id'])) and len(new_chat['messages']) > COLchats + count_db(new_chat['id']):  #########
+        add_mess(str(new_chat['id']), new_chat['messages'])
+    elif not in_db(str(new_chat['id'])):
+        cur.execute(
+            f"create table i{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
+        add_mess(str(new_chat['id']), new_chat['messages'])
     conn.commit()
 
 
@@ -179,6 +196,7 @@ async def read(message: types.Message):
         data = json.loads(data)
         await add_chat(data, '1')
         await message.answer("Все ок) Переписка обрабатывается")
+
     except:
         await message.answer("Произошла ошибка при чтении файла:(")
 
