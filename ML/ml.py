@@ -1,15 +1,18 @@
 from __future__ import annotations
 import uuid
-from yandex_cloud_ml_sdk import YCloudML, AsyncYCloudML
+import pathlib
 from get_training_dataset import get_dataset
+from yandex_cloud_ml_sdk import YCloudML, AsyncYCloudML
 
 FOLDER_ID = "b1gkunod3dtj94p8vu0n"
 AUTH = "y0_AgAAAABl9s3tAATuwQAAAAEckqnVAAD2ZUFsM4ZABJr-lI1W9ZKbL4Po_w"
 async_sdk = AsyncYCloudML(folder_id=FOLDER_ID, auth=AUTH)
 sdk = YCloudML(folder_id=FOLDER_ID, auth=AUTH)
 
+def local_path(path: str) -> pathlib.Path:
+    return pathlib.Path(__file__).parent / path
 
-async def create_dataset(path_to_requests : str):
+async def create_dataset(path_to_requests):
     dataset_draft = async_sdk.datasets.from_path_deferred(
         task_type="RequestsToTuneModel",
         path=path_to_requests,
@@ -34,23 +37,21 @@ def tune_model(dataset_id, temperature, max_tokens) -> str:
     return result_uri
 
 
-def run_model(model_uri : str, prompt : str):
+def run_model(model_uri: str, prompt: str):
     model = sdk.models.completions(model_uri)
 
     result = model.run(prompt)
     return result.alternatives[0].text
 
 
-def add_model(chat_id : int, temperature=None, max_tokens=None):
+def add_model(chat_id: int, temperature=None, max_tokens=None):
     dataset = get_dataset(chat_id)
 
-    with open("data_to_train/train.jsonlines", "w") as f:
+    with open("data_to_train/train.jsonlines", "w", encoding="utf-8") as f:
         for request in dataset:
             f.write(f"{request}\n")
 
-
-    dataset_id = create_dataset("data_to_train/train.jsonlines")
+    dataset_id = create_dataset(local_path("data_to_train/train.jsonlines"))
 
     model_id = tune_model(dataset_id, temperature, max_tokens)
     return model_id
-
