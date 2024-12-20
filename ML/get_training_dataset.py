@@ -26,7 +26,7 @@ def get_dataset(chat_id: int) -> list:
         if modified_chat and message["full_name"] == modified_chat[-1]["full_name"] and not message["id_reply"]:
             if datetime.timestamp(message["mes_date"]) - datetime.timestamp(
                     modified_chat[-1]["mes_date"]) <= MAX_MESSAGE_DELAY:
-                modified_chat[-1]["text"] += f"\n{message["text"]}"
+                modified_chat[-1]["text"] += f"\n{message["mes_text"]}"
                 modified_chat[-1]["mes_date"] = message["mes_date"]
                 by_id[message["id"]] = len(modified_chat) - 1
                 continue
