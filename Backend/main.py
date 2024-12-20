@@ -13,22 +13,24 @@ from aiogram.types import FSInputFile, \
     InputMediaPhoto
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from config import TOKEN, dialogsHistory, LENdialoges
-
-logging.basicConfig(level=logging.INFO)
-bot = Bot(token=TOKEN)
-dp = Dispatcher()
-
+from config import dialogsHistory, LENdialoges
+from tqdm import tqdm
 from dotenv import load_dotenv
 
-load_dotenv("../.env")
+load_dotenv()
+logging.basicConfig(level=logging.INFO)
+TOKEN = os.getenv("BOT_TOKEN")
+
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
 
 conn = psycopg2.connect(
     host=os.getenv("HOST"),
     database=os.getenv("DATABASE"),
-    user=os.getenv("USER"),
+    user=os.getenv("USER_52"),
     password=os.getenv("PASSWORD"),
-    port=os.getenv("PORT")
+    port=os.getenv("PORT"),
+    target_session_attrs="read-write"
 )
 cur = conn.cursor()
 context = dict()
@@ -54,7 +56,6 @@ async def forGPT(m: types.Message):
 
 @dp.message(Command('start'))
 async def start(message: types.Message):
-    await message.answer(str(message.from_user.id))
     await message.reply(
         f"Привет, {message.from_user.full_name}!\nЧтобы создать своего нейродвойника для чата напишите /newbot")
 
@@ -103,33 +104,15 @@ async def history(call: types.CallbackQuery, callback_data: NumbersCallbackFacto
         await UpdateReplic(call.message, user_data[call.from_user.id])
 
 
-async def get_user_name(user_id):
-    try:
-        user = await bot.get_chat(user_id)
-        return user.username
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
-
-
-async def get_full_name(user_id):
-    try:
-        user = await bot.get_chat(user_id)
-        return user.full_name
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
-
-
-async def add_mess(chat_id, messages):
-    for u in range(len(messages)):
+def add_mess(chat_id, messages):
+    for u in tqdm(range(len(messages))):
         mes = messages[u]
         if mes['type'] == 'service': continue
         id_reply = 0  # если это не ответ на сообщение, то 0, иначе id сообщения
         if mes.get("reply_to_message_id", '-') != '-':
             id_reply = mes["reply_to_message_id"]
-        user_name = get_user_name(mes['from_id'])
-        full_name = get_full_name(mes['from_id'])
+        user_name = mes['from_id']
+        full_name = mes['from']
         is_photo = mes.get("photo", "-")
         if is_photo != '-':
             b = ""
@@ -150,7 +133,7 @@ async def add_mess(chat_id, messages):
         if mes['text'] == '' and mes['media_type'] == 'sticker':
             (cur.execute(
                 f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{mes['sticker_emoji']}', {id_reply}, '{mes['date']}'')"))
-        elif mes.get("media_type", '-') != '-':
+        elif mes.get("media_type", '-') != '-' and isinstance(mes['text'], str):
             b = mes['text'].strip()
             if len(b) == 0: continue
             cur.execute(
@@ -158,13 +141,11 @@ async def add_mess(chat_id, messages):
 
 
 async def add_chat(new_chat, model_id: str):
-    # with open('result.json', 'r', encoding='utf-8') as f:
-    #     new_chat = json.load(f)
-    # здесь нужно указать id модели
+    cur.execute()
     cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, {model_id})")
     cur.execute(
         f"create table i{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
-    await add_mess(str(new_chat['id']), new_chat['messages'])
+    add_mess(str(new_chat['id']), new_chat['messages'])
     conn.commit()
 
 
@@ -196,7 +177,7 @@ async def read(message: types.Message):
     try:
         data = file_stream.read().decode('utf-8')
         data = json.loads(data)
-        await add_chat(data, '52')
+        await add_chat(data, '1')
         await message.answer("Все ок) Переписка обрабатывается")
     except:
         await message.answer("Произошла ошибка при чтении файла:(")
