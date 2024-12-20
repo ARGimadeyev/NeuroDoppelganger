@@ -1,6 +1,7 @@
 from __future__ import annotations
 import uuid
 import pathlib
+import asyncio
 from yandex_cloud_ml_sdk import YCloudML, AsyncYCloudML
 
 
@@ -30,7 +31,7 @@ def local_path(path: str) -> pathlib.Path:
 
 async def create_dataset(path_to_requests):
     dataset_draft = async_sdk.datasets.from_path_deferred(
-        task_type="RequestsToTuneModel",
+        task_type="TextToTextGeneration",
         path=path_to_requests,
         upload_format="jsonlines",
         name="sirius",
@@ -67,11 +68,11 @@ def add_model(chat_id: int, temperature=None, max_tokens=None):
         for request in dataset:
             f.write(f"{request}\n")
 
-    dataset_id = create_dataset(local_path("data_to_train/train.jsonlines"))
-
-    model_id = tune_model(dataset_id, temperature, max_tokens)
-    return model_id
+    # dataset_id = asyncio.run(create_dataset(local_path("data_to_train/train.jsonlines")))
+    # print(dataset_id)
+    # model_id = tune_model(dataset_id, temperature, max_tokens)
+    # return model_id
 
 
 if __name__ == "__main__":
-    print(add_model(1234, 0.5, 8000))
+    add_model(1592127213)
