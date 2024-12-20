@@ -55,4 +55,3 @@ def add_model(chat_id: int, temperature=None, max_tokens=None):
 
     model_id = tune_model(dataset_id, temperature, max_tokens)
     return model_id
-
