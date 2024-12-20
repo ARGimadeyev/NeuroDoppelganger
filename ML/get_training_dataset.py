@@ -18,8 +18,8 @@ def add_case(window: deque, result: list, chat: list, by_id: dict) -> None:
     result.append(case)
 
 
-def get_dataset(chat_path: str) -> list:
-    chat = get_messages(chat_path)
+def get_dataset(chat_id: int) -> list:
+    chat = get_messages(chat_id)
     modified_chat = list()
     by_id = dict()
     for message in chat:
