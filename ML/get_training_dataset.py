@@ -23,7 +23,7 @@ def get_dataset(chat_id: int) -> list:
     modified_chat = list()
     by_id = dict()
     for message in chat:
-        if modified_chat and message["user_name"] == modified_chat[-1]["user_name"] and not message["id_reply"]:
+        if modified_chat and message["full_name"] == modified_chat[-1]["full_name"] and not message["id_reply"]:
             if datetime.timestamp(message["mes_date"]) - datetime.timestamp(
                     modified_chat[-1]["mes_date"]) <= MAX_MESSAGE_DELAY:
                 modified_chat[-1]["text"] += f"\n{message["text"]}"
@@ -38,22 +38,22 @@ def get_dataset(chat_id: int) -> list:
 
     user_messages_count = dict()
     for message in modified_chat:
-        if user_messages_count.get(message["user_name"]):
-            user_messages_count[message["user_name"]] += 1
+        if user_messages_count.get(message["full_name"]):
+            user_messages_count[message["full_name"]] += 1
         else:
-            user_messages_count[message["user_name"]] = 1
+            user_messages_count[message["full_name"]] = 1
 
     result = list()
     window = deque(maxlen=WINDOW_SIZE)
 
     for i in range(WINDOW_SIZE):
         window.append(modified_chat[i])
-    if user_messages_count[window[-1]["user_name"]] >= MIN_MESSAGE_THRESHOLD:
+    if user_messages_count[window[-1]["full_name"]] >= MIN_MESSAGE_THRESHOLD:
         add_case(window, result, modified_chat, by_id)
     for i in range(WINDOW_SIZE, len(modified_chat)):
         window.popleft()
         window.append(modified_chat[i])
-        if user_messages_count[window[-1]["user_name"]] >= MIN_MESSAGE_THRESHOLD:
+        if user_messages_count[window[-1]["full_name"]] >= MIN_MESSAGE_THRESHOLD:
             add_case(window, result, modified_chat, by_id)
 
     return result
