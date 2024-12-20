@@ -1,7 +1,6 @@
 from __future__ import annotations
 import uuid
 from yandex_cloud_ml_sdk import YCloudML, AsyncYCloudML
-import asyncio
 
 FOLDER_ID = "b1gkunod3dtj94p8vu0n"
 AUTH = "y0_AgAAAABl9s3tAATuwQAAAAEckqnVAAD2ZUFsM4ZABJr-lI1W9ZKbL4Po_w"
@@ -9,7 +8,7 @@ async_sdk = AsyncYCloudML(folder_id=FOLDER_ID, auth=AUTH)
 sdk = YCloudML(folder_id=FOLDER_ID, auth=AUTH)
 
 
-async def create_dataset(path_to_requests):
+async def create_dataset(path_to_requests : str):
     dataset_draft = async_sdk.datasets.from_path_deferred(
         task_type="RequestsToTuneModel",
         path=path_to_requests,
@@ -23,7 +22,7 @@ async def create_dataset(path_to_requests):
     return dataset_id
 
 
-def tune_model(dataset_id, temperature, max_tokens):
+def tune_model(dataset_id, temperature, max_tokens) -> str:
     train_dataset = sdk.datasets.get(dataset_id)
     base_model = sdk.models.completions("yandexgpt-lite")
 
@@ -34,14 +33,14 @@ def tune_model(dataset_id, temperature, max_tokens):
     return result_uri
 
 
-def run_model(model_uri, prompt):
+def run_model(model_uri : str, prompt : str):
     model = sdk.models.completions(model_uri)
 
     result = model.run(prompt)
     return result.alternatives[0].text
 
 
-def add_model(path_to_requests, temperature=None, max_tokens=None):
+def add_model(path_to_requests : str, temperature=None, max_tokens=None):
     dataset_id = create_dataset(path_to_requests)
 
     model_id = tune_model(dataset_id, temperature, max_tokens)
