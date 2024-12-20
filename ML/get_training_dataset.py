@@ -11,8 +11,8 @@ def add_case(window: deque, result: list, chat: list, by_id: dict) -> None:
     case["request"] = [{"role": "system", "text": task}]
     for i in range(0, WINDOW_SIZE - 1):
         case["request"].append({"role": window[i]["full_name"], "text": window[i]["mes_text"]})
-        if window[i]["id_reply"] and by_id.get(window[i]["id_reply"]):
-            txt = f"[Ответ на сообщение {chat[by_id[window[i]["id_reply"]]]}] {case["request"][-1]["text"]}"
+        if window[i]["id_reply"] and by_id.get(window[i]["id_reply"], 0):
+            txt = f"[Ответ на сообщение {chat[by_id[window[i]["id_reply"]]]["mes_text"]}] {case["request"][-1]["text"]}"
             case["request"][-1]["text"] = txt
     case["response"] = window[-1]["mes_text"]
     result.append(case)
