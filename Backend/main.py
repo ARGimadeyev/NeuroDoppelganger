@@ -153,16 +153,23 @@ def count_db(chat_id):
         return res[0][0]
     return 0
 
+def get_model_id(chat_id):
+    cur.execute(f"select model_id from get_model_id where chat_id = '{chat_id}'")
+    res = cur.fetchall()
+    return res
 
-async def add_chat(new_chat, model_id: str):
-    cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, {model_id})")
-
-    if in_db(str(new_chat['id'])) and len(new_chat['messages']) > COLchats + count_db(new_chat['id']):  #########
+async def add_chat(new_chat):
+    if in_db(str(new_chat['id'])) and len(new_chat['messages']) > COLchats + count_db(new_chat['id']):
         add_mess(str(new_chat['id']), new_chat['messages'])
+        model_id = get_model_id(new_chat['id'])
+        cur.execute(f"delete from get_model_id where chat_id = '{str(new_chat['id'])}'")
+        cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
     elif not in_db(str(new_chat['id'])):
         cur.execute(
             f"create table i{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
         add_mess(str(new_chat['id']), new_chat['messages'])
+        model_id = get_model_id(new_chat['id'])
+        cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
     conn.commit()
 
 

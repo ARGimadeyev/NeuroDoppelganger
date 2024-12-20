@@ -5,7 +5,6 @@ import sys
 from tqdm import tqdm
 
 sys.path.append("..")
-from Backend.main import bot
 
 load_dotenv("../.env")
 
@@ -14,7 +13,8 @@ conn = psycopg2.connect(
     database=os.getenv("DATABASE"),
     user=os.getenv("USER_52"),
     password=os.getenv("PASSWORD"),
-    port=os.getenv("PORT")
+    port=os.getenv("PORT"),
+    target_session_attrs="read-write"
 )
 cur = conn.cursor()
 
@@ -55,8 +55,8 @@ def add_mess(chat_id, messages):
                 f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{b}', {id_reply}, '{mes['date']}')")
 
 
-async def add_chat(new_chat, model_id: str):
-    cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, {model_id})")
+def add_chat(new_chat, model_id: str):
+    cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
 
     cur.execute(
         f"create table i{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
@@ -64,7 +64,7 @@ async def add_chat(new_chat, model_id: str):
     conn.commit()
 
 
-async def get_messages(chat_id):
+def get_messages(chat_id):
     cur.execute(f"select *from i{chat_id}")
     all_mes = cur.fetchall()
     res = list()
@@ -84,3 +84,4 @@ async def get_messages(chat_id):
 
 with open('result.json', 'r', encoding='utf-8') as f:
     new_chat = json.load(f)
+    add_chat(new_chat, "YandexGPT-Lite")
