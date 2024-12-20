@@ -1,6 +1,7 @@
 from __future__ import annotations
 import uuid
 from yandex_cloud_ml_sdk import YCloudML, AsyncYCloudML
+from get_training_dataset import get_dataset
 
 FOLDER_ID = "b1gkunod3dtj94p8vu0n"
 AUTH = "y0_AgAAAABl9s3tAATuwQAAAAEckqnVAAD2ZUFsM4ZABJr-lI1W9ZKbL4Po_w"
@@ -40,8 +41,15 @@ def run_model(model_uri : str, prompt : str):
     return result.alternatives[0].text
 
 
-def add_model(path_to_requests : str, temperature=None, max_tokens=None):
-    dataset_id = create_dataset(path_to_requests)
+def add_model(chat_id : int, temperature=None, max_tokens=None):
+    dataset = get_dataset(chat_id)
+
+    with open("data_to_train/train.jsonlines", "w") as f:
+        for request in dataset:
+            f.write(f"{request}\n")
+
+
+    dataset_id = create_dataset("data_to_train/train.jsonlines")
 
     model_id = tune_model(dataset_id, temperature, max_tokens)
     return model_id
