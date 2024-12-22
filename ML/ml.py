@@ -5,7 +5,7 @@ import pathlib
 import asyncio
 import jsonlines
 
-from get_training_dataset import get_dataset, modify_chat, get_case
+from ML.get_training_dataset import get_dataset, modify_chat, get_case
 from yandex_cloud_ml_sdk import YCloudML, AsyncYCloudML
 from Backend.config import FOLDER_ID, YAUTH, WINDOW_SIZE
 from DB.db import parse_chat, cur

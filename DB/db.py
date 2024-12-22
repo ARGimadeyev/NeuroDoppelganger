@@ -2,7 +2,6 @@ import psycopg2
 import os
 
 from dotenv import load_dotenv
-from Backend.main import in_db
 load_dotenv()
 conn = psycopg2.connect(
     host=os.getenv("HOST"),
@@ -13,6 +12,11 @@ conn = psycopg2.connect(
     target_session_attrs="read-write"
 )
 cur = conn.cursor()
+
+def in_db(chat_id):
+    cur.execute(f"select *from get_model_id where chat_id = '{chat_id}'")
+    res = cur.fetchall()
+    return len(res)
 
 def count_db(chat_id):
     if in_db(chat_id):
