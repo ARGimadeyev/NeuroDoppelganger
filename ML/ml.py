@@ -81,7 +81,7 @@ if __name__ == "__main__":
     #         result["response"] = result["response"].replace('"', '').replace("\n", "")
     #         f.write(re.sub(r"\\\\", "", f"{result}\n".replace("'", '"').replace("xa0", "")))
     # model_id = "gpt://b1gkunod3dtj94p8vu0n/yandexgpt-lite/latest@tamrbia1ueelig81q7fut"
-    # for ds in sdk.datasets.list():
-    #     ds.delete()
-    dataset_id = "fds430d4ls9u4fuscmne"
-    print(tune_model(dataset_id))
+    for ds in sdk.datasets.list():
+        print(ds)
+    # dataset_id = "fds430d4ls9u4fuscmne"
+    # print(tune_model(dataset_id))
