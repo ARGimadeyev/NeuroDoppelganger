@@ -43,7 +43,7 @@ async def get_messages(chat_id):
 
 
 async def get_last(chat_id: int) -> list:
-    cur.execut(f"SELECT *"
+    cur.execute(f"SELECT *"
                f"FROM i{chat_id}"
                f"ORDER BY id DESC"
                f"LIMIT {4 * WINDOW_SIZE}"
