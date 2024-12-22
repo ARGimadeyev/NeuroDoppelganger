@@ -19,7 +19,7 @@ def add_case(window: deque, result: list, chat: list, by_id: dict) -> None:
     result.append(case)
 
 
-def get_dataset(chat_id: int) -> list:
+def get_dataset(chat_id: int, only_active_users: bool = True) -> list:
     chat = asyncio.run(get_messages(chat_id))
     modified_chat = list()
     by_id = dict()
@@ -49,12 +49,12 @@ def get_dataset(chat_id: int) -> list:
 
     for i in range(WINDOW_SIZE):
         window.append(modified_chat[i])
-    if user_messages_count[window[-1]["full_name"]] >= MIN_MESSAGE_THRESHOLD:
+    if user_messages_count[window[-1]["full_name"]] >= MIN_MESSAGE_THRESHOLD or not only_active_users:
         add_case(window, result, modified_chat, by_id)
     for i in range(WINDOW_SIZE, len(modified_chat)):
         window.popleft()
         window.append(modified_chat[i])
-        if user_messages_count[window[-1]["full_name"]] >= MIN_MESSAGE_THRESHOLD:
+        if user_messages_count[window[-1]["full_name"]] >= MIN_MESSAGE_THRESHOLD or not only_active_users:
             add_case(window, result, modified_chat, by_id)
 
     return result

@@ -2,6 +2,7 @@ from __future__ import annotations
 import uuid
 import pathlib
 import asyncio
+import jsonlines
 from get_training_dataset import get_dataset
 from yandex_cloud_ml_sdk import YCloudML, AsyncYCloudML
 
@@ -37,7 +38,9 @@ def tune_model(dataset_id, temperature, max_tokens) -> str:
     return result_uri
 
 
-def run_model(model_uri: str, prompt: str):
+def run_model(chat_id: int):
+    dataset = get_dataset(chat_id, False)[-1]
+    prompt = f"{dataset["request"][0]["text"]}\n{dataset["response"]}"
     model = sdk.models.completions(model_uri)
 
     result = model.run(prompt)
@@ -47,14 +50,11 @@ def run_model(model_uri: str, prompt: str):
 def add_model(chat_id: int, temperature=None, max_tokens=None):
     dataset = get_dataset(chat_id)
 
-    with open("data_to_train/train.jsonlines", "w", encoding="utf-8") as f:
-        for request in dataset:
-            f.write(f"{request}\n")
+    with jsonlines.open("data_to_train/train.jsonlines", mode="w") as f:
+        for row in dataset:
+            f.write(row)
 
     dataset_id = asyncio.run(create_dataset(local_path("data_to_train/train.jsonlines")))
     model_id = tune_model(dataset_id, temperature, max_tokens)
 
     return model_id
-
-if __name__ == "__main__":
-    print(add_model(4637831705))
