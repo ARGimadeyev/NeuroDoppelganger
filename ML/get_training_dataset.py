@@ -6,14 +6,14 @@ import asyncio
 
 def add_case(window: deque, result: list, chat: list, by_id: dict) -> None:
     case = dict()
-    task = (f"Ты - {window[WINDOW_SIZE - 1]["full_name"]} и участвуешь в переписке. "
-            f"Твоя задача - ответить от лица {window[WINDOW_SIZE - 1]["full_name"]}, полностью копируя его манеру речи")
-    case["request"] = [{"role": "system", "text": task}]
-    for i in range(0, WINDOW_SIZE - 1):
-        case["request"].append({"role": window[i]["full_name"], "text": window[i]["mes_text"]})
-        if window[i]["id_reply"] and by_id.get(window[i]["id_reply"]):
-            txt = f"[Ответ на сообщение {chat[by_id[window[i]["id_reply"]]]["mes_text"]}] {case["request"][-1]["text"]}"
-            case["request"][-1]["text"] = txt
+    task = "Ты участвуешь в переписке ниже и должен отвечать от имени людей, чтобы это выглядело естественно. Полностью копируй их манеру речи."
+    chat_text: str = ""
+    for elem in chat:
+        chat_text += f"[Сообщение от {elem["full_name"]}"
+        if elem["id_reply"] and by_id.get(elem["id_reply"]):
+            chat_text += f", ответ на сообщение: {chat[by_id[elem["id_reply"]]]["mes_text"]}"
+        chat_text += f"] {elem["mes_text"]}\n"
+    case["request"] = [{"role": "system", "text": f"{task}\n{chat_text}"}, {"role": "user", "text": f"Ответь от лица {window[WINDOW_SIZE - 1]["full_name"]}"}]
     case["response"] = window[-1]["mes_text"]
     result.append(case)
 
@@ -50,10 +50,12 @@ def get_dataset(chat_id: int) -> list:
         window.append(modified_chat[i])
     if user_messages_count[window[-1]["full_name"]] >= MIN_MESSAGE_THRESHOLD:
         add_case(window, result, modified_chat, by_id)
+        return result
     for i in range(WINDOW_SIZE, len(modified_chat)):
         window.popleft()
         window.append(modified_chat[i])
         if user_messages_count[window[-1]["full_name"]] >= MIN_MESSAGE_THRESHOLD:
             add_case(window, result, modified_chat, by_id)
+            return result
 
     return result
