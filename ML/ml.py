@@ -8,14 +8,14 @@ import jsonlines
 from ML.get_training_dataset import get_dataset, modify_chat, get_case
 from yandex_cloud_ml_sdk import YCloudML, AsyncYCloudML
 from Backend.config import FOLDER_ID, YAUTH, WINDOW_SIZE
-from DB.db import parse_chat, cur
+from DB.db import parse_chat, cur, get_model_id
 from dotenv import load_dotenv
 
 load_dotenv()
 async_sdk = AsyncYCloudML(folder_id=FOLDER_ID, auth=YAUTH)
 sdk = YCloudML(folder_id=FOLDER_ID, auth=YAUTH)
 
-async def get_last(chat_id: int) -> list:
+def get_last(chat_id: int) -> list:
     cur.execute(f"SELECT *FROM all{chat_id} ORDER BY id DESC LIMIT {4 * WINDOW_SIZE}")
     all_mes = cur.fetchall()[::-1]
     return parse_chat(all_mes)
@@ -55,28 +55,27 @@ def tune_model(dataset_id, temperature, max_tokens) -> str:
 
 async def add_model(chat_id: int, temperature=None, max_tokens=None):
     # print("1")
-    dataset = await get_dataset(chat_id)
+    dataset = get_dataset(chat_id)
     with jsonlines.open("data_to_train/train.jsonlines", mode="w") as f:
         for row in dataset:
             f.write(row)
 
     ds_hash = str(uuid.uuid4())
 
-    dataset_id = await create_dataset(dataset_name=f"{chat_id}_{ds_hash}")
+    dataset_id = asyncio.run(create_dataset(dataset_name=f"{chat_id}_{ds_hash}"))
     print(f"{dataset_id=}")
     model_uri = tune_model(dataset_id, temperature, max_tokens)
     print(f"{model_uri=}")
     # print("1 done")
     return model_uri
 
-
 async def get_response(chat_id, user):
-    chat = await get_last(chat_id)
+    chat = get_last(chat_id)
     modified_chat, by_id = modify_chat(chat)
 
     prompt = get_case(modified_chat, modified_chat, by_id, user)["request"]
     # print(prompt)
-    model_uri = "gpt://b1gkunod3dtj94p8vu0n/yandexgpt-lite/latest@tamr3ve9m4i159urv6mmt"
+    model_uri = get_model_id(chat_id)
 
     model = sdk.models.completions(model_uri)
 

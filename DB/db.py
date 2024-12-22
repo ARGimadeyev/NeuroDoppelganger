@@ -45,4 +45,9 @@ async def get_messages(chat_id):
     all_mes = cur.fetchall()
     return parse_chat(all_mes)
 
+def get_model_id(chat_id):
+    cur.execute(f"select model_id from get_model_id where chat_id = '{chat_id}'")
+    res = cur.fetchall()
+    return res[0][0]
+
 conn.commit()
