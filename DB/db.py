@@ -16,12 +16,14 @@ cur = conn.cursor()
 def in_db(chat_id):
     cur.execute(f"select *from get_model_id where chat_id = '{chat_id}'")
     res = cur.fetchall()
+    conn.commit()
     return len(res)
 
 def count_db(chat_id):
     if in_db(chat_id):
         cur.execute(f"select count(*) from i{chat_id}")
         res = cur.fetchall()
+        conn.commit()
         return res[0][0]
     return 0
 
@@ -43,11 +45,13 @@ def parse_chat(all_mes) -> list:
 async def get_messages(chat_id):
     cur.execute(f"select *from i{chat_id}")
     all_mes = cur.fetchall()
+    conn.commit()
     return parse_chat(all_mes)
 
 def get_model_id(chat_id):
     cur.execute(f"select model_id from get_model_id where chat_id = '{chat_id}'")
     res = cur.fetchall()
+    conn.commit()
     return res[0][0]
 
 conn.commit()

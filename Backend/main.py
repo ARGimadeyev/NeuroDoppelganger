@@ -147,8 +147,9 @@ async def add_chat(new_chat):
             f"create table i{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
         cur.execute(
             f"create table all{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
+        conn.commit()
         add_mess(str(new_chat['id']), new_chat['messages'])
-
+        conn.commit()
         model_id = await add_model(new_chat['id'])  # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
 
         cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
