@@ -53,7 +53,7 @@ def tune_model(dataset_id, temperature, max_tokens) -> str:
     result_uri = tuned_model.uri
     return result_uri
 
-async def add_model(chat_id: int, temperature=None, max_tokens=None):
+def add_model(chat_id: int, temperature=None, max_tokens=None):
     # print("1")
     dataset = get_dataset(chat_id)
     with jsonlines.open("data_to_train/train.jsonlines", mode="w") as f:
