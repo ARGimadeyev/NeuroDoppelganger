@@ -101,7 +101,7 @@ async def read(message: types.Message):
     if file_extension != "json": return
     try:
         data = file_stream.read().decode('utf-8')
-        asyncio.run(add_chat(data))
+        add_chat(data)
         data = json.loads(data)
         groupName = data.get("name")
         groupID = data.get("id")
