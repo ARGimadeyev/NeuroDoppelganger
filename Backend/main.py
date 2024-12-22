@@ -139,7 +139,7 @@ async def add_chat(new_chat):
         add_mess(str(new_chat['id']), new_chat['messages'])
         cur.execute(f"delete from get_model_id where chat_id = '{str(new_chat['id'])}'")
 
-        model_id = '52'  # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
+        model_id = await add_model(new_chat['id'])  # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
 
         cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
     elif not in_db(str(new_chat['id'])):
@@ -149,7 +149,7 @@ async def add_chat(new_chat):
             f"create table all{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
         add_mess(str(new_chat['id']), new_chat['messages'])
 
-        model_id = '52'  # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
+        model_id = await add_model(new_chat['id'])  # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
 
         cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
     conn.commit()
@@ -173,8 +173,8 @@ async def read(message: types.Message):
         data = json.loads(data)
         await add_chat(data)
         await message.answer("Все ок) Переписка обрабатывается")
-    except:
-        await message.answer("Произошла ошибка при чтении файла:(")
+    except Exception as e:
+        await message.answer(f"Произошла ошибка при чтении файла:(\n {e}")
 
 
 @dp.message()

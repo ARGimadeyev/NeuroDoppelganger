@@ -2,9 +2,8 @@ from datetime import datetime
 from collections import deque
 from DB.db import get_messages
 from Backend.config import MIN_MESSAGE_THRESHOLD, WINDOW_SIZE, MAX_MESSAGE_DELAY
-import asyncio
 
-def get_case(window, chat: list, by_id: dict) -> dict:
+def get_case(window, chat: list, by_id: dict, user: str = None) -> dict:
     case = dict()
     task = "Ты участвуешь в переписке ниже и должен отвечать от имени людей, чтобы это выглядело естественно. Полностью копируй их манеру речи."
     chat_text: str = ""
@@ -14,7 +13,10 @@ def get_case(window, chat: list, by_id: dict) -> dict:
         if elem["id_reply"] and by_id.get(elem["id_reply"]):
             chat_text += f", ответ на сообщение: {chat[by_id[elem["id_reply"]]]["mes_text"]}"
         chat_text += f"] {elem["mes_text"]}\n"
-    case["request"] = [{"role": "system", "text": f"{task}\n\n{chat_text}"}, {"role": "user", "text": f"Ответь от лица {window[-1]["full_name"]}"}]
+
+    if user is None:
+        user = window[-1]["full_name"]
+    case["request"] = [{"role": "system", "text": f"{task}\n\n{chat_text}"}, {"role": "user", "text": f"Ответь от лица {user}"}]
     case["response"] = window[-1]["mes_text"]
     return case
 
@@ -35,8 +37,9 @@ def modify_chat(chat):
 
     return modified_chat, by_id
 
-def get_dataset(chat_id: int, only_active_users: bool = True) -> list:
-    chat = asyncio.run(get_messages(chat_id))
+async def get_dataset(chat_id: int, only_active_users: bool = True) -> list:
+    # print(2)
+    chat = await get_messages(chat_id)
     modified_chat, by_id = modify_chat(chat)
 
     user_messages_count = dict()
@@ -55,7 +58,7 @@ def get_dataset(chat_id: int, only_active_users: bool = True) -> list:
         window.append(message)
         if user_messages_count[window[-1]["full_name"]] >= MIN_MESSAGE_THRESHOLD or not only_active_users:
             result.append(get_case(window, modified_chat, by_id))
-
+    # print(2, "done")
     return result
 
 

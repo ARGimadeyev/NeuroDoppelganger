@@ -53,27 +53,29 @@ def tune_model(dataset_id, temperature, max_tokens) -> str:
     result_uri = tuned_model.uri
     return result_uri
 
-def add_model(chat_id: int, temperature=None, max_tokens=None):
-    dataset = get_dataset(chat_id)
-
+async def add_model(chat_id: int, temperature=None, max_tokens=None):
+    # print("1")
+    dataset = await get_dataset(chat_id)
     with jsonlines.open("data_to_train/train.jsonlines", mode="w") as f:
         for row in dataset:
             f.write(row)
 
     ds_hash = str(uuid.uuid4())
 
-    dataset_id = asyncio.run(create_dataset(dataset_name=f"{chat_id}_{ds_hash}"))
+    dataset_id = await create_dataset(dataset_name=f"{chat_id}_{ds_hash}")
+    print(f"{dataset_id=}")
     model_uri = tune_model(dataset_id, temperature, max_tokens)
-
+    print(f"{model_uri=}")
+    # print("1 done")
     return model_uri
 
 
-def get_response(chat_id):
-    chat = asyncio.run(get_last(chat_id))
+async def get_response(chat_id, user):
+    chat = await get_last(chat_id)
     modified_chat, by_id = modify_chat(chat)
 
-    prompt = get_case(modified_chat, modified_chat, by_id)["request"]
-    print(prompt)
+    prompt = get_case(modified_chat, modified_chat, by_id, user)["request"]
+    # print(prompt)
     model_uri = "gpt://b1gkunod3dtj94p8vu0n/yandexgpt-lite/latest@tamr3ve9m4i159urv6mmt"
 
     model = sdk.models.completions(model_uri)
