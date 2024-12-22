@@ -50,13 +50,11 @@ def get_dataset(chat_id: int) -> list:
         window.append(modified_chat[i])
     if user_messages_count[window[-1]["full_name"]] >= MIN_MESSAGE_THRESHOLD:
         add_case(window, result, modified_chat, by_id)
-        return result
     for i in range(WINDOW_SIZE, len(modified_chat)):
         window.popleft()
         window.append(modified_chat[i])
         if user_messages_count[window[-1]["full_name"]] >= MIN_MESSAGE_THRESHOLD:
             add_case(window, result, modified_chat, by_id)
-            return result
 
     return result
 
