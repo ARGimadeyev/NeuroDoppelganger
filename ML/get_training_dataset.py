@@ -13,7 +13,7 @@ def add_case(window: deque, result: list, chat: list, by_id: dict) -> None:
         if elem["id_reply"] and by_id.get(elem["id_reply"]):
             chat_text += f", ответ на сообщение: {chat[by_id[elem["id_reply"]]]["mes_text"]}"
         chat_text += f"] {elem["mes_text"]}\n"
-    case["request"] = [{"role": "system", "text": f"{task}\n{chat_text}"}, {"role": "user", "text": f"Ответь от лица {window[WINDOW_SIZE - 1]["full_name"]}"}]
+    case["request"] = [{"role": "system", "text": f"{task}\n\n{chat_text}"}, {"role": "user", "text": f"Ответь от лица {window[WINDOW_SIZE - 1]["full_name"]}"}]
     case["response"] = window[-1]["mes_text"]
     result.append(case)
 
@@ -59,3 +59,15 @@ def get_dataset(chat_id: int) -> list:
             return result
 
     return result
+
+
+def fix_text(text: str) -> str:
+    text = text.replace("\"", "'")
+    ind = text.find("\n\n")
+    text = text[:ind].replace("'", "\"") + text[ind:]
+    ind = text.rfind("}")
+    for _ in range(2):
+        ind = text.rfind("}", 0, ind)
+    ind -= 1
+    text = text[:ind] + text[ind:].replace("'", "\"")
+    return text
