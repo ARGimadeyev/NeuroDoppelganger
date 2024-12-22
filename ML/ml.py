@@ -1,30 +1,60 @@
 from __future__ import annotations
+
+import os
 import uuid
-from yandex_cloud_ml_sdk import YCloudML, AsyncYCloudML
-
+import pathlib
 import asyncio
+import jsonlines
+import psycopg2
 
-FOLDER_ID = "b1gkunod3dtj94p8vu0n"
-AUTH = "y0_AgAAAABl9s3tAATuwQAAAAEckqnVAAD2ZUFsM4ZABJr-lI1W9ZKbL4Po_w"
-async_sdk = AsyncYCloudML(folder_id=FOLDER_ID, auth=AUTH)
-sdk = YCloudML(folder_id=FOLDER_ID, auth=AUTH)
+from get_training_dataset import get_dataset, modify_chat, get_case
+from yandex_cloud_ml_sdk import YCloudML, AsyncYCloudML
+from Backend.config import FOLDER_ID, YAUTH, WINDOW_SIZE
+from DB.db import parse_chat
+from dotenv import load_dotenv
 
+load_dotenv()
+async_sdk = AsyncYCloudML(folder_id=FOLDER_ID, auth=YAUTH)
+sdk = YCloudML(folder_id=FOLDER_ID, auth=YAUTH)
+conn = psycopg2.connect(
+    host=os.getenv("HOST"),
+    database=os.getenv("DATABASE"),
+    user=os.getenv("USER_52"),
+    password=os.getenv("PASSWORD"),
+    port=os.getenv("PORT"),
+    target_session_attrs="read-write"
+)
+cur = conn.cursor()
 
-async def create_dataset(path_to_requests):
+async def get_last(chat_id: int) -> list:
+    cur.execute(f"SELECT *FROM i{chat_id} ORDER BY id DESC LIMIT {4 * WINDOW_SIZE}")
+    all_mes = cur.fetchall()[::-1]
+    return parse_chat(all_mes)
+
+def local_path(path: str) -> pathlib.Path:
+    return pathlib.Path(__file__).parent / path
+
+async def create_dataset(dataset_name: str):
     dataset_draft = async_sdk.datasets.from_path_deferred(
-        task_type="RequestsToTuneModel",
-        path=path_to_requests,
+        task_type="TextToTextGeneration",
+        path=local_path("data_to_train/train.jsonlines"),
         upload_format="jsonlines",
-        name="sirius",
+        name=dataset_name,
     )
 
-    operation = await dataset_draft.upload()
-    dataset = await operation
-    dataset_id = dataset.id
-    return dataset_id
+    await dataset_draft.upload(upload_timeout=60)
+
+    dataset = None
+    while dataset is None:
+        async for ds in async_sdk.datasets.list(name_pattern=dataset_name, status="READY"):
+            dataset = ds
+            break
+        await asyncio.sleep(60)
+
+    return dataset.id
 
 
-def tune_model(dataset_id, temperature, max_tokens):
+def tune_model(dataset_id, temperature, max_tokens) -> str:
     train_dataset = sdk.datasets.get(dataset_id)
     base_model = sdk.models.completions("yandexgpt-lite")
 
@@ -34,17 +64,41 @@ def tune_model(dataset_id, temperature, max_tokens):
     result_uri = tuned_model.uri
     return result_uri
 
+def add_model(chat_id: int, temperature=None, max_tokens=None):
+    dataset = get_dataset(chat_id)
 
-def run_model(model_uri, prompt):
+    with jsonlines.open("data_to_train/train.jsonlines", mode="w") as f:
+        for row in dataset:
+            f.write(row)
+
+    ds_hash = str(uuid.uuid4())
+
+    dataset_id = asyncio.run(create_dataset(dataset_name=f"{chat_id}_{ds_hash}"))
+    model_uri = tune_model(dataset_id, temperature, max_tokens)
+
+    return model_uri
+
+
+def get_response(chat_id):
+    chat = asyncio.run(get_last(chat_id))
+    modified_chat, by_id = modify_chat(chat)
+
+    prompt = get_case(modified_chat, modified_chat, by_id)["request"]
+    print(prompt)
+    model_uri = "gpt://b1gkunod3dtj94p8vu0n/yandexgpt-lite/latest@tamr3ve9m4i159urv6mmt"
+
     model = sdk.models.completions(model_uri)
 
     result = model.run(prompt)
-    return result.alternatives[0].text
+    response = result.alternatives[0].text
+    return response
 
+if __name__ == "__main__":
+    chat_id = 1592127213
+    dataset = get_dataset(chat_id)
 
-def add_model(path_to_requests, temperature=None, max_tokens=None):
-    dataset_id = create_dataset(path_to_requests)
+    with jsonlines.open("data_to_train/train.jsonlines", mode="w") as f:
+        for row in dataset:
+            f.write(row)
 
-    model_id = tune_model(dataset_id, temperature, max_tokens)
-    return model_id
-
+    # print(get_response(1592127213))

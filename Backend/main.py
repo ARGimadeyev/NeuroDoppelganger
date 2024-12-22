@@ -14,6 +14,7 @@ from aiogram.types import FSInputFile, \
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from config import dialogsHistory, LENdialoges, COLchats
+from DB.db import parse_chat
 from tqdm import tqdm
 from dotenv import load_dotenv
 
@@ -166,19 +167,7 @@ async def add_chat(new_chat):
 async def get_messages(chat_id):
     cur.execute(f"select *from i{chat_id}")
     all_mes = cur.fetchall()
-    res = list()
-    for row in all_mes:
-        b = dict()
-        b["id"] = row[0]
-        b["user_id"] = row[1]
-        b["user_name"] = row[2]
-        b["full_name"] = row[3]
-        b["mes_type"] = row[4]
-        b["mes_text"] = row[5]
-        b["id_reply"] = row[6]
-        b["mes_date"] = row[7]
-        res.append(b)
-    return res
+    return parse_chat(all_mes)
 
 
 @dp.message(F.document)

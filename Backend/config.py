@@ -1,7 +1,11 @@
 import os
 from dotenv import load_dotenv
 
-COLchats = 100
+
+load_dotenv()
+
+FOLDER_ID = os.getenv("FOLDER_ID")
+YAUTH = os.getenv("YAUTH")
 
 dialogsHistory = [
     '''Экспорт чатов доступен только через Telegram Desktop на компьютере. Скачать Telegram Desktop можно с официального сайта.''',
@@ -11,7 +15,7 @@ dialogsHistory = [
 ]
 
 LENdialoges = 4
-
+COLchats = 100
 # ML parameters
 MIN_MESSAGE_THRESHOLD = 10
 MAX_MESSAGE_DELAY = 120

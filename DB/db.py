@@ -1,13 +1,9 @@
 import psycopg2
-from Backend.config import WINDOW_SIZE
-from dotenv import load_dotenv
-import sys
+import asyncio
 import os
 
-sys.path.append("..")
-
-load_dotenv("../.env")
-
+from dotenv import load_dotenv
+load_dotenv()
 conn = psycopg2.connect(
     host=os.getenv("HOST"),
     database=os.getenv("DATABASE"),
@@ -17,10 +13,28 @@ conn = psycopg2.connect(
     target_session_attrs="read-write"
 )
 
-
 cur = conn.cursor()
 
-def modify_chat(all_mes) -> list:
+# user_name - user_id
+# full_name - имя контакта
+
+# cur.execute("create table get_model_id (chat_id text, model_id text);")
+
+def in_db(chat_id):
+    cur.execute(f"select *from get_model_id where chat_id = '{chat_id}'")
+    res = cur.fetchall()
+    return len(res)
+
+
+def count_db(chat_id):
+    if in_db(chat_id):
+        cur.execute(f"select count(*) from i{chat_id}")
+        res = cur.fetchall()
+        return res[0][0]
+    return 0
+
+
+def parse_chat(all_mes) -> list:
     res = list()
     for row in all_mes:
         b = dict()
@@ -38,16 +52,6 @@ def modify_chat(all_mes) -> list:
 async def get_messages(chat_id):
     cur.execute(f"select *from i{chat_id}")
     all_mes = cur.fetchall()
-    return modify_chat(all_mes)
-
-
-async def get_last(chat_id: int) -> list:
-    cur.execute(f"SELECT *"
-               f"FROM i{chat_id}"
-               f"ORDER BY id DESC"
-               f"LIMIT {4 * WINDOW_SIZE}"
-               )
-    all_mes = cur.fetchall()[::-1]
-    return modify_chat(all_mes)
+    return parse_chat(all_mes)
 
 conn.commit()
