@@ -1,30 +1,19 @@
 from __future__ import annotations
 
-import os
 import uuid
 import pathlib
 import asyncio
 import jsonlines
-import psycopg2
 
 from get_training_dataset import get_dataset, modify_chat, get_case
 from yandex_cloud_ml_sdk import YCloudML, AsyncYCloudML
 from Backend.config import FOLDER_ID, YAUTH, WINDOW_SIZE
-from DB.db import parse_chat
+from DB.db import parse_chat, cur
 from dotenv import load_dotenv
 
 load_dotenv()
 async_sdk = AsyncYCloudML(folder_id=FOLDER_ID, auth=YAUTH)
 sdk = YCloudML(folder_id=FOLDER_ID, auth=YAUTH)
-conn = psycopg2.connect(
-    host=os.getenv("HOST"),
-    database=os.getenv("DATABASE"),
-    user=os.getenv("USER_52"),
-    password=os.getenv("PASSWORD"),
-    port=os.getenv("PORT"),
-    target_session_attrs="read-write"
-)
-cur = conn.cursor()
 
 async def get_last(chat_id: int) -> list:
     cur.execute(f"SELECT *FROM i{chat_id} ORDER BY id DESC LIMIT {4 * WINDOW_SIZE}")
@@ -93,12 +82,3 @@ def get_response(chat_id):
     response = result.alternatives[0].text
     return response
 
-if __name__ == "__main__":
-    chat_id = 1592127213
-    dataset = get_dataset(chat_id)
-
-    with jsonlines.open("data_to_train/train.jsonlines", mode="w") as f:
-        for row in dataset:
-            f.write(row)
-
-    # print(get_response(1592127213))

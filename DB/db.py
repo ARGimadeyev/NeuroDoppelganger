@@ -1,8 +1,8 @@
 import psycopg2
-import asyncio
 import os
 
 from dotenv import load_dotenv
+from Backend.main import in_db
 load_dotenv()
 conn = psycopg2.connect(
     host=os.getenv("HOST"),
@@ -12,19 +12,7 @@ conn = psycopg2.connect(
     port=os.getenv("PORT"),
     target_session_attrs="read-write"
 )
-
 cur = conn.cursor()
-
-# user_name - user_id
-# full_name - имя контакта
-
-# cur.execute("create table get_model_id (chat_id text, model_id text);")
-
-def in_db(chat_id):
-    cur.execute(f"select *from get_model_id where chat_id = '{chat_id}'")
-    res = cur.fetchall()
-    return len(res)
-
 
 def count_db(chat_id):
     if in_db(chat_id):
@@ -32,7 +20,6 @@ def count_db(chat_id):
         res = cur.fetchall()
         return res[0][0]
     return 0
-
 
 def parse_chat(all_mes) -> list:
     res = list()
