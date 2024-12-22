@@ -33,26 +33,6 @@ conn = psycopg2.connect(
     target_session_attrs="read-write"
 )
 cur = conn.cursor()
-context = dict()
-
-
-async def add(_id_: int, message: types.Message):
-    if _id_ not in context:
-        context[_id_] = deque()
-    context[_id_].append(message)
-    while len(context[_id_]) > 100:
-        context[_id_].popleft()
-
-
-async def forGPT(m: types.Message):
-    if m.text is not None:
-        return f"{m.from_user.username}: {m.text}"
-    if m.caption is not None:
-        return f"{m.from_user.username}: {m.caption}"
-    if m.content_type == ContentType.STICKER:
-        return f"{m.from_user.username}: {m.sticker.emoji}"
-    return ""
-
 
 @dp.message(Command('start'))
 async def start(message: types.Message):
@@ -119,25 +99,28 @@ def add_mess(chat_id, messages):
             for s in mes['text_entities']:
                 b += s['text']
             b = b.strip()
+            b = b.replace("'", "''")
             if len(b) == 0: continue
             cur.execute(
-                f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}', 'photo', '{b}', {id_reply}, '{mes['date']}')")
+                f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}', '{user_name}','{full_name}', 'photo', '{b}', {id_reply}, '{mes['date']}')")
             continue
         b = ""
         for s in mes['text_entities']:
             b += s['text']
         b = b.strip()
+        b = b.replace("'", "''")
         if len(b) == 0: continue
         cur.execute(
-            f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}','{user_name}', '{full_name}','text', '{b}',{id_reply}, '{mes['date']}')")
+            f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}','{user_name}', '{full_name}','text', '{b}',{id_reply}, '{mes['date']}')")
         if mes['text'] == '' and mes['media_type'] == 'sticker':
             (cur.execute(
-                f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{mes['sticker_emoji']}', {id_reply}, '{mes['date']}'')"))
+                f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{mes['sticker_emoji']}', {id_reply}, '{mes['date']}'')"))
         elif mes.get("media_type", '-') != '-' and isinstance(mes['text'], str):
             b = mes['text'].strip()
+            b = b.replace("'", "''")
             if len(b) == 0: continue
             cur.execute(
-                f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{b}', {id_reply}, '{mes['date']}')")
+                f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{b}', {id_reply}, '{mes['date']}')")
 
 
 def in_db(chat_id):
@@ -159,14 +142,18 @@ def get_model_id(chat_id):
 async def add_chat(new_chat):
     if in_db(str(new_chat['id'])) and len(new_chat['messages']) > COLchats + count_db(new_chat['id']):
         add_mess(str(new_chat['id']), new_chat['messages'])
-        model_id = get_model_id(new_chat['id'])
         cur.execute(f"delete from get_model_id where chat_id = '{str(new_chat['id'])}'")
+
+        model_id = get_model_id(new_chat['id'])  # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
+
         cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
     elif not in_db(str(new_chat['id'])):
         cur.execute(
             f"create table i{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
         add_mess(str(new_chat['id']), new_chat['messages'])
-        model_id = get_model_id(new_chat['id'])
+
+        model_id = get_model_id(new_chat['id'])  # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
+
         cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
     conn.commit()
 
@@ -208,7 +195,26 @@ async def read(message: types.Message):
 
 @dp.message()
 async def parse(message: types.Message):
-    await add(message.chat.id, message)
+    chat_id = str(message.chat.id)[4:]
+    mes_id = message.message_id
+    user_id = user_name = 'user' + str(message.from_user.id)
+    full_name = message.from_user.full_name
+    mes_type = message.content_type
+    mes_text = message.text
+    id_reply = 0
+    if message.reply_to_message:
+        id_reply = message.reply_to_message.message_id
+    mes_date = message.date
+    if mes_type == ContentType.STICKER:
+        mes_text = str(message.sticker.emoji)
+    elif message.content_type == ContentType.TEXT:
+        mes_text = message.text
+    else:
+        mes_text = message.caption
+    mes_type = str(mes_type)[12:].lower()
+    cur.execute(
+        f"insert into i{chat_id} values ('{mes_id}', '{user_id}', '{user_name}','{full_name}','{mes_type}', '{mes_text}', {id_reply}, '{mes_date}')")
+    conn.commit()
 
 
 async def main():

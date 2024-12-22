@@ -1,11 +1,10 @@
-import psycopg2, json
-import os
-
-
-from tqdm import tqdm
-
+import json
+import psycopg2
+from Backend.config import WINDOW_SIZE
 from dotenv import load_dotenv
 import sys
+import os
+
 sys.path.append("..")
 
 load_dotenv("../.env")
@@ -18,57 +17,11 @@ conn = psycopg2.connect(
     port=os.getenv("PORT"),
     target_session_attrs="read-write"
 )
+
+
 cur = conn.cursor()
 
-
-def add_mess(chat_id, messages):
-    for u in tqdm(range(len(messages))):
-        mes = messages[u]
-        if mes['type'] == 'service': continue
-        id_reply = 0  # если это не ответ на сообщение, то 0, иначе id сообщения
-        if mes.get("reply_to_message_id", '-') != '-':
-            id_reply = mes["reply_to_message_id"]
-        user_name = mes['from_id']
-        full_name = mes['from']
-        is_photo = mes.get("photo", "-")
-        if is_photo != '-':
-            b = ""
-            for s in mes['text_entities']:
-                b += s['text']
-            b = b.strip()
-            if len(b) == 0: continue
-            cur.execute(
-                f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}', 'photo', '{b}', {id_reply}, '{mes['date']}')")
-            continue
-        b = ""
-        for s in mes['text_entities']:
-            b += s['text']
-        b = b.strip()
-        if len(b) == 0: continue
-        cur.execute(
-            f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}','{user_name}', '{full_name}','text', '{b}',{id_reply}, '{mes['date']}')")
-        if mes['text'] == '' and mes['media_type'] == 'sticker':
-            cur.execute(
-                f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{mes['sticker_emoji']}', {id_reply}, '{mes['date']}')")
-        elif mes.get("media_type", '-') != '-' and isinstance(mes['text'], str):
-            b = mes['text'].strip()
-            if len(b) == 0: continue
-            cur.execute(
-                f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{b}', {id_reply}, '{mes['date']}')")
-
-
-def add_chat(new_chat, model_id: str):
-    cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
-
-    cur.execute(
-        f"create table i{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
-    add_mess(str(new_chat['id']), new_chat['messages'])
-    conn.commit()
-
-
-def get_messages(chat_id):
-    cur.execute(f"select *from i{chat_id}")
-    all_mes = cur.fetchall()
+def modify_chat(all_mes) -> list:
     res = list()
     for row in all_mes:
         b = dict()
@@ -83,7 +36,19 @@ def get_messages(chat_id):
         res.append(b)
     return res
 
+async def get_messages(chat_id):
+    cur.execute(f"select *from i{chat_id}")
+    all_mes = cur.fetchall()
+    return modify_chat(all_mes)
 
-with open('result.json', 'r', encoding='utf-8') as f:
-    new_chat = json.load(f)
-    add_chat(new_chat, "YandexGPT-Lite")
+
+async def get_last(chat_id: int) -> list:
+    cur.execut(f"SELECT *"
+               f"FROM i{chat_id}"
+               f"ORDER BY id DESC"
+               f"LIMIT {4 * WINDOW_SIZE}"
+               )
+    all_mes = cur.fetchall()[::-1]
+    return modify_chat(all_mes)
+
+conn.commit()
