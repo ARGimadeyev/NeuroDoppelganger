@@ -69,7 +69,7 @@ async def add_model(chat_id: int, temperature=None, max_tokens=None):
     # print("1 done")
     return model_uri
 
-async def get_response(chat_id, user):
+def get_response(chat_id, user):
     chat = get_last(chat_id)
     modified_chat, by_id = modify_chat(chat)
 
