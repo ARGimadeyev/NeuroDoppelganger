@@ -1,4 +1,3 @@
-import json
 import psycopg2
 from Backend.config import WINDOW_SIZE
 from dotenv import load_dotenv

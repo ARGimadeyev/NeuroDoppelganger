@@ -10,7 +10,7 @@ dialogsHistory = [
     '''Для правильной обработки ваших сообщений, формат файла должен быть JSON. После сохранения файла, оправьте его в этот чат'''
 ]
 
-LENdialges = 4
+LENdialoges = 4
 
 # ML parameters
 MIN_MESSAGE_THRESHOLD = 10
