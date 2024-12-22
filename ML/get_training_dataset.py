@@ -8,7 +8,8 @@ def add_case(window: deque, result: list, chat: list, by_id: dict) -> None:
     case = dict()
     task = "Ты участвуешь в переписке ниже и должен отвечать от имени людей, чтобы это выглядело естественно. Полностью копируй их манеру речи."
     chat_text: str = ""
-    for elem in chat:
+    for elem in window:
+        if elem == window[-1]: break
         chat_text += f"[Сообщение от {elem["full_name"]}"
         if elem["id_reply"] and by_id.get(elem["id_reply"]):
             chat_text += f", ответ на сообщение: {chat[by_id[elem["id_reply"]]]["mes_text"]}"
@@ -57,15 +58,3 @@ def get_dataset(chat_id: int) -> list:
             add_case(window, result, modified_chat, by_id)
 
     return result
-
-
-def fix_text(text: str) -> str:
-    text = text.replace("\"", "'")
-    ind = text.find("\n\n")
-    text = text[:ind].replace("'", "\"") + text[ind:]
-    ind = text.rfind("}")
-    for _ in range(2):
-        ind = text.rfind("}", 0, ind)
-    ind -= 1
-    text = text[:ind] + text[ind:].replace("'", "\"")
-    return text
