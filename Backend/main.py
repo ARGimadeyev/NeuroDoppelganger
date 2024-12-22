@@ -154,9 +154,7 @@ def count_db(chat_id):
     return 0
 
 def get_model_id(chat_id):
-    cur.execute(f"select model_id from get_model_id where chat_id = '{chat_id}'")
-    res = cur.fetchall()
-    return res
+    return 'yandex-gpt'
 
 async def add_chat(new_chat):
     if in_db(str(new_chat['id'])) and len(new_chat['messages']) > COLchats + count_db(new_chat['id']):
@@ -201,7 +199,7 @@ async def read(message: types.Message):
     try:
         data = file_stream.read().decode('utf-8')
         data = json.loads(data)
-        await add_chat(data, '1')
+        await add_chat(data)
         await message.answer("Все ок) Переписка обрабатывается")
 
     except:

@@ -1,9 +1,11 @@
 import psycopg2, json
 import os
-from dotenv import load_dotenv
-import sys
+
+
 from tqdm import tqdm
 
+from dotenv import load_dotenv
+import sys
 sys.path.append("..")
 
 load_dotenv("../.env")
@@ -46,8 +48,8 @@ def add_mess(chat_id, messages):
         cur.execute(
             f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}','{user_name}', '{full_name}','text', '{b}',{id_reply}, '{mes['date']}')")
         if mes['text'] == '' and mes['media_type'] == 'sticker':
-            (cur.execute(
-                f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{mes['sticker_emoji']}', {id_reply}, '{mes['date']}'')"))
+            cur.execute(
+                f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{mes['sticker_emoji']}', {id_reply}, '{mes['date']}')")
         elif mes.get("media_type", '-') != '-' and isinstance(mes['text'], str):
             b = mes['text'].strip()
             if len(b) == 0: continue
