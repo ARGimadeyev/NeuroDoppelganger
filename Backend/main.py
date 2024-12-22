@@ -119,25 +119,28 @@ def add_mess(chat_id, messages):
             for s in mes['text_entities']:
                 b += s['text']
             b = b.strip()
+            b = b.replace("'", "''")
             if len(b) == 0: continue
             cur.execute(
-                f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}', 'photo', '{b}', {id_reply}, '{mes['date']}')")
+                f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}', '{user_name}','{full_name}', 'photo', '{b}', {id_reply}, '{mes['date']}')")
             continue
         b = ""
         for s in mes['text_entities']:
             b += s['text']
         b = b.strip()
+        b = b.replace("'", "''")
         if len(b) == 0: continue
         cur.execute(
-            f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}','{user_name}', '{full_name}','text', '{b}',{id_reply}, '{mes['date']}')")
+            f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}','{user_name}', '{full_name}','text', '{b}',{id_reply}, '{mes['date']}')")
         if mes['text'] == '' and mes['media_type'] == 'sticker':
             (cur.execute(
-                f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{mes['sticker_emoji']}', {id_reply}, '{mes['date']}'')"))
+                f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{mes['sticker_emoji']}', {id_reply}, '{mes['date']}'')"))
         elif mes.get("media_type", '-') != '-' and isinstance(mes['text'], str):
             b = mes['text'].strip()
+            b = b.replace("'", "''")
             if len(b) == 0: continue
             cur.execute(
-                f"INSERT INTO i{chat_id} VALUES ({u + 1}, '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{b}', {id_reply}, '{mes['date']}')")
+                f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{b}', {id_reply}, '{mes['date']}')")
 
 
 def in_db(chat_id):
@@ -154,9 +157,7 @@ def count_db(chat_id):
     return 0
 
 def get_model_id(chat_id):
-    cur.execute(f"select model_id from get_model_id where chat_id = '{chat_id}'")
-    res = cur.fetchall()
-    return res
+    return 'yandex-gpt'
 
 async def add_chat(new_chat):
     if in_db(str(new_chat['id'])) and len(new_chat['messages']) > COLchats + count_db(new_chat['id']):
