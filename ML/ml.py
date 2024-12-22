@@ -16,7 +16,7 @@ async_sdk = AsyncYCloudML(folder_id=FOLDER_ID, auth=YAUTH)
 sdk = YCloudML(folder_id=FOLDER_ID, auth=YAUTH)
 
 async def get_last(chat_id: int) -> list:
-    cur.execute(f"SELECT *FROM i{chat_id} ORDER BY id DESC LIMIT {4 * WINDOW_SIZE}")
+    cur.execute(f"SELECT *FROM all{chat_id} ORDER BY id DESC LIMIT {4 * WINDOW_SIZE}")
     all_mes = cur.fetchall()[::-1]
     return parse_chat(all_mes)
 

@@ -130,19 +130,26 @@ def count_db(chat_id):
 
 
 async def add_chat(new_chat):
-    if in_db(str(new_chat['id'])) and len(new_chat['messages']) > COLchats + count_db(new_chat['id']):
+    count_new_mes = 0
+    for e in new_chat['messages']:
+        if e['type'] != 'service':
+            count_new_mes += 1
+    if in_db(str(new_chat['id'])) and count_new_mes > COLchats + count_db(new_chat['id']):
+        cur.execute("delete from i{str(new_chat['id'])}")
         add_mess(str(new_chat['id']), new_chat['messages'])
         cur.execute(f"delete from get_model_id where chat_id = '{str(new_chat['id'])}'")
 
-        model_id = add_model(new_chat['id'])  # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
+        model_id = '52'  # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
 
         cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
     elif not in_db(str(new_chat['id'])):
         cur.execute(
             f"create table i{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
+        cur.execute(
+            f"create table all{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
         add_mess(str(new_chat['id']), new_chat['messages'])
 
-        model_id = add_model(new_chat['id'])  # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
+        model_id = '52'  # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
 
         cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
     conn.commit()
@@ -166,7 +173,6 @@ async def read(message: types.Message):
         data = json.loads(data)
         await add_chat(data)
         await message.answer("Все ок) Переписка обрабатывается")
-
     except:
         await message.answer("Произошла ошибка при чтении файла:(")
 
@@ -189,9 +195,10 @@ async def parse(message: types.Message):
         mes_text = message.text
     else:
         mes_text = message.caption
+    mes_text = mes_text.replace("'", "''")
     mes_type = str(mes_type)[12:].lower()
     cur.execute(
-        f"insert into i{chat_id} values ('{mes_id}', '{user_id}', '{user_name}','{full_name}','{mes_type}', '{mes_text}', {id_reply}, '{mes_date}')")
+        f"insert into all{chat_id} values ('{mes_id}', '{user_id}', '{user_name}','{full_name}','{mes_type}', '{mes_text}', {id_reply}, '{mes_date}')")
     conn.commit()
 
 
