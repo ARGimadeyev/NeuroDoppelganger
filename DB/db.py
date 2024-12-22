@@ -15,11 +15,17 @@ from aiogram.types import FSInputFile, \
     InputMediaPhoto
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram import Bot
+from Backend.config import WINDOW_SIZE
+import os
 
 COLchats = 100
 
 conn = psycopg2.connect(
-
+    host="rc1a-f5zl0cindthoycb7.mdb.yandexcloud.net,rc1b-imbuhpyfss3w33fz.mdb.yandexcloud.net,rc1d-k0ktcmy3byzzlkqd.mdb.yandexcloud.net",
+    database="db1",
+    user="user-sirius",
+    password="sirius-2024",
+    port="6432"
 )
 
 cur = conn.cursor()
@@ -98,9 +104,7 @@ async def add_chat(new_chat):
     conn.commit()
 
 
-async def get_messages(chat_id):
-    cur.execute(f"select *from i{chat_id}")
-    all_mes = cur.fetchall()
+def modify_chat(all_mes) -> list:
     res = list()
     for row in all_mes:
         b = dict()
@@ -115,5 +119,19 @@ async def get_messages(chat_id):
         res.append(b)
     return res
 
+async def get_messages(chat_id):
+    cur.execute(f"select *from i{chat_id}")
+    all_mes = cur.fetchall()
+    return modify_chat(all_mes)
+
+
+async def get_last(chat_id: int) -> list:
+    cur.execut(f"SELECT *"
+               f"FROM i{chat_id}"
+               f"ORDER BY id DESC"
+               f"LIMIT {4 * WINDOW_SIZE}"
+               )
+    all_mes = cur.fetchall()[::-1]
+    return modify_chat(all_mes)
 
 conn.commit()
