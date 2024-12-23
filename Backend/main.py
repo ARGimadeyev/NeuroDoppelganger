@@ -99,7 +99,8 @@ def add_mess(chat_id, messages):
         for s in mes['text_entities']:
             b += s['text']
         b = b.strip()
-        b = b.replace("'", "''")
+        if b:
+            b = b.replace("'", "''")
         if len(b) == 0: continue
         cur.execute(f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}','{user_name}', '{full_name}','text', '{b}',{id_reply}, '{mes['date']}')")
         if is_photo != '-':
@@ -109,7 +110,8 @@ def add_mess(chat_id, messages):
                 f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{mes['sticker_emoji']}', {id_reply}, '{mes['date']}'')"))
         elif mes.get("media_type", '-') != '-' and isinstance(mes['text'], str):
             b = mes['text'].strip()
-            b = b.replace("'", "''")
+            if b:
+                b = b.replace("'", "''")
             if len(b) == 0: continue
             cur.execute(f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{b}', {id_reply}, '{mes['date']}')")
 
@@ -191,10 +193,16 @@ async def get_full_name(chat_id, user_name):
 
 @dp.message(Command('otvet'))
 async def otvet(message: types.Message):
-    if '@' not in message.text: return
-    username = message.text.split()[1][1:]
     chat_id = str(message.chat.id)[4:]
-    full_name = await get_full_name(chat_id, username)
+    if '@' not in message.text:
+        full_name = message.text.split('"')[1]
+    else:
+        username = message.text.split()[1][1:]
+        try:
+            full_name = await get_full_name(chat_id, username)
+        except:
+            await message.reply("Напишите правильно")
+            return
     print(get_response(chat_id, full_name))
 
 @dp.message()
@@ -216,7 +224,8 @@ async def parse(message: types.Message):
         mes_text = message.text
     else:
         mes_text = message.caption
-    mes_text = mes_text.replace("'", "''")
+    if mes_text:
+        mes_text = mes_text.replace("'", "''")
     mes_type = str(mes_type)[12:].lower()
     if not await in_all_db(chat_id):
         cur.execute(

@@ -16,18 +16,26 @@ load_dotenv()
 async_sdk = AsyncYCloudML(folder_id=FOLDER_ID, auth=YAUTH)
 sdk = YCloudML(folder_id=FOLDER_ID, auth=YAUTH)
 
+
+def delete_dataset(dataset_name):
+    for dataset in sdk.datasets.list(status="READY", name_pattern=dataset_name):
+        dataset.delete()
+
+
 def get_last(chat_id: str) -> list:
     cur.execute(f"SELECT *FROM all{chat_id} ORDER BY id DESC LIMIT {4 * WINDOW_SIZE}")
     all_mes = cur.fetchall()[::-1]
     return parse_chat(all_mes)
 
+
 def local_path(path: str) -> pathlib.Path:
     return pathlib.Path(__file__).parent / path
+
 
 async def create_dataset(dataset_name: str):
     dataset_draft = async_sdk.datasets.from_path_deferred(
         task_type="TextToTextGeneration",
-        path="C:/Users/barso/OneDrive/Desktop/Programming Python/NeuroDoppelganger/ML/data_to_train/train.jsonlines",
+        path="ML/data_to_train/train.jsonlines",
         upload_format="jsonlines",
         name=dataset_name,
     )
@@ -45,27 +53,34 @@ async def create_dataset(dataset_name: str):
     return dataset.id
 
 
-def tune_model(dataset_id, temperature = None, max_tokens = None) -> str:
-    train_dataset = sdk.datasets.get(dataset_id)
-    base_model = sdk.models.completions("yandexgpt-lite")
+async def tune_model(dataset_id, temperature=None, max_tokens=None) -> str:
+    train_dataset = await async_sdk.datasets.get(dataset_id)
+    base_model = async_sdk.models.completions("yandexgpt-lite")
 
-    tuned_model = base_model.tune(train_dataset, name=str(uuid.uuid4()))
-    tuned_model = tuned_model.configure(temperature=temperature, max_tokens=max_tokens)
+    tuned_model = await base_model.tune(train_dataset, name=str(uuid.uuid4()))
+    tuned_model = await tuned_model.configure(temperature=temperature, max_tokens=max_tokens)
 
     result_uri = tuned_model.uri
     return result_uri
 
+
 async def add_model(chat_id: str, temperature=None, max_tokens=None):
     dataset = await get_dataset(chat_id)
-    with jsonlines.open("C:/Users/barso/OneDrive/Desktop/Programming Python/NeuroDoppelganger/ML/data_to_train/train.jsonlines", mode="w") as f:
+    with jsonlines.open(
+            "ML/data_to_train/train.jsonlines",
+            mode="w") as f:
         for row in dataset:
             f.write(row)
 
     ds_hash = str(uuid.uuid4())
-    dataset_id = await create_dataset(dataset_name=f"{chat_id}_{ds_hash}")
+    dataset_name = f"{chat_id}_{ds_hash}"
+    dataset_id = await create_dataset(dataset_name=dataset_name)
     print(f"{dataset_id=}: {datetime.now()}")
-    model_uri = tune_model(dataset_id, temperature, max_tokens)
+    model_uri = await tune_model(dataset_id, temperature, max_tokens)
     print(f"{model_uri=}: {datetime.now()}")
+
+    delete_dataset(dataset_name)
+
     return model_uri
 
 

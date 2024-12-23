@@ -51,6 +51,9 @@ def get_model_id(chat_id):
     cur.execute(f"select model_id from get_model_id where chat_id = '{chat_id}'")
     res = cur.fetchall()
     conn.commit()
-    return len(res) and len(res[0]) and res[0][0]
+    if len(res) and len(res[0]) and res[0][0]:
+        return res[0][0]
+    else:
+        return 'gpt://b1gkunod3dtj94p8vu0n/yandexgpt-lite/latest@tamr3ve9m4i159urv6mmt'
 
 conn.commit()
