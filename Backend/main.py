@@ -6,7 +6,7 @@ from typing import Optional
 import psycopg2
 from aiogram import Bot, Dispatcher, types
 from aiogram import F
-from aiogram.enums import ContentType
+from aiogram.enums import ContentType, ParseMode
 from aiogram.filters.callback_data import CallbackData
 from aiogram.filters.command import Command
 from aiogram.types import FSInputFile, InputMediaPhoto
@@ -46,6 +46,8 @@ async def start(message: types.Message):
 ImportHistory = []
 user_data = dict()
 st = dict()
+
+
 class NumbersCallbackFactory(CallbackData, prefix="history"):
     action: str
     value: Optional[int] = None
@@ -215,19 +217,26 @@ async def otvet(message: types.Message):
             return
     text = get_response(chat_id, full_name)
     conn.commit()
-    await message.answer(text)
+    text = get_response(chat_id, full_name)
+    text = text.replace("@NeuroDoppelgangerBot", "")
+    if text:
+        await message.reply(text + f'\n<b>{full_name}</b>', parse_mode=ParseMode.HTML)
 
 
 @dp.message()
 async def parse(message: types.Message):
-    if message.chat.id not in st:
-        st[message.chat.id] = set()
-    st[message.chat.id].add(message.from_user.full_name)
-
     chat_id = str(message.chat.id)[4:]
 
-    k = random.randint(1, 3)
-    user = random.sample(list(st[message.chat.id]), 1)
+
+    if message.chat.id not in st:
+        st[message.chat.id] = {"Нейродвойник😎"}
+    k = random.randint(1, 5)
+
+
+    st[message.chat.id].discard(message.from_user.full_name)
+    user = random.sample(list(st[message.chat.id]), 1)[0]
+    print(list(st[message.chat.id]))
+    st[message.chat.id].add(message.from_user.full_name)
     if '@' in message.text:
         usern = message.text.split('@')[1]
         usern = usern.split()[0]
@@ -263,9 +272,13 @@ async def parse(message: types.Message):
         f"insert into all{chat_id} values ('{mes_id}', '{user_id}', '{user_name}','{full_name}','{mes_type}', '{mes_text}', {id_reply}, '{mes_date}')")
     conn.commit()
     await asyncio.sleep(2)
-    text = get_response(chat_id, user)
+    if user =="Нейродвойник😎":
+        text = get_response(chat_id, full_name)
+    else:
+        text = get_response(chat_id, user)
+    text = text.replace("@NeuroDoppelgangerBot", "")
     if k == 3 and text:
-        await message.answer(text)
+        await message.reply(text + f'\n<b>{user}</b>', parse_mode=ParseMode.HTML)
 
 
 async def main():

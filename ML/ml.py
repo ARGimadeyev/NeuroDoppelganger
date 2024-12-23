@@ -26,7 +26,6 @@ def get_last(chat_id: str) -> list:
     cur.execute(f"SELECT *FROM all{chat_id}")
     all_mes = cur.fetchall()
     all_mes = all_mes[max(0, len(all_mes) - 10):]
-    print(all_mes)
     return parse_chat(all_mes)
 
 
