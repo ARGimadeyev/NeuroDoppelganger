@@ -26,20 +26,21 @@ def local_path(path: str) -> pathlib.Path:
 async def create_dataset(dataset_name: str):
     dataset_draft = async_sdk.datasets.from_path_deferred(
         task_type="TextToTextGeneration",
-        path=local_path("data_to_train/train.jsonlines"),
+        path=local_path("../ML/data_to_train/train.jsonlines"),
         upload_format="jsonlines",
         name=dataset_name,
     )
-
+    print("2")
     await dataset_draft.upload(upload_timeout=60)
-
+    print("2")
     dataset = None
     while dataset is None:
+        print("52")
         async for ds in async_sdk.datasets.list(name_pattern=dataset_name, status="READY"):
             dataset = ds
             break
         await asyncio.sleep(60)
-
+    print("2")
     return dataset.id
 
 
@@ -54,14 +55,14 @@ def tune_model(dataset_id, temperature, max_tokens) -> str:
     return result_uri
 
 async def add_model(chat_id: int, temperature=None, max_tokens=None):
-    # print("1")
+    print("1")
     dataset = await get_dataset(chat_id)
-    with jsonlines.open("data_to_train/train.jsonlines", mode="w") as f:
+    with jsonlines.open("../ML/data_to_train/train.jsonlines", mode="w") as f:
         for row in dataset:
             f.write(row)
 
     ds_hash = str(uuid.uuid4())
-
+    print("1")
     dataset_id = await create_dataset(dataset_name=f"{chat_id}_{ds_hash}")
     print(f"{dataset_id=}")
     model_uri = tune_model(dataset_id, temperature, max_tokens)
