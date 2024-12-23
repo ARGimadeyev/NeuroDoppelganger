@@ -183,12 +183,19 @@ async def read(message: types.Message):
         await message.answer(f"Произошла ошибка при чтении файла:(\n {e}")
 
 async def get_full_name(chat_id, user_name):
-    chat_id = str(chat_id)[4:]
     cur.execute(f"select full_name from all{chat_id} where user_name = '{user_name}'")
     res = cur.fetchall()
     if len(res) and len(res[0]):
         return res[0][0]
     return None
+
+@dp.message(Command('otvet'))
+async def otvet(message: types.Message):
+    if '@' not in message.text: return
+    username = message.text.split()[1][1:]
+    chat_id = str(message.chat.id)[4:]
+    full_name = await get_full_name(chat_id, username)
+    print(get_response(chat_id, full_name))
 
 @dp.message()
 async def parse(message: types.Message):
