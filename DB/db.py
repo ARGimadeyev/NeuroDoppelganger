@@ -52,6 +52,6 @@ def get_model_id(chat_id):
     cur.execute(f"select model_id from get_model_id where chat_id = '{chat_id}'")
     res = cur.fetchall()
     conn.commit()
-    return res[0][0]
+    return len(res) and len(res[0]) and res[0][0]
 
 conn.commit()
