@@ -85,7 +85,6 @@ async def history(call: types.CallbackQuery, callback_data: NumbersCallbackFacto
     else:
         await UpdateReplic(call.message, user_data[call.from_user.id])
 
-
 def add_mess(chat_id, messages):
     for u in tqdm(range(len(messages))):
         mes = messages[u]
@@ -183,12 +182,20 @@ async def read(message: types.Message):
     except Exception as e:
         await message.answer(f"Произошла ошибка при чтении файла:(\n {e}")
 
+async def get_full_name(chat_id, user_name):
+    chat_id = str(chat_id)[4:]
+    cur.execute(f"select full_name from all{chat_id} where user_name = '{user_name}'")
+    res = cur.fetchall()
+    if len(res) and len(res[0]):
+        return res[0][0]
+    return None
 
 @dp.message()
 async def parse(message: types.Message):
     chat_id = str(message.chat.id)[4:]
     mes_id = message.message_id
-    user_id = user_name = 'user' + str(message.from_user.id)
+    user_id = 'user' + str(message.from_user.id)
+    user_name = str(message.from_user.username)
     full_name = message.from_user.full_name
     mes_type = message.content_type
     mes_text = message.text
