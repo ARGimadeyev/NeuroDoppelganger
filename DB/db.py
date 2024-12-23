@@ -14,10 +14,9 @@ conn = psycopg2.connect(
 cur = conn.cursor()
 
 def in_db(chat_id):
-    cur.execute(f"select *from get_model_id where chat_id = '{chat_id}'")
+    cur.execute(f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'i{chat_id}');")
     res = cur.fetchall()
-    conn.commit()
-    return len(res)
+    return len(res) and len(res[0]) and res[0][0] == True
 
 def count_db(chat_id):
     if in_db(chat_id):

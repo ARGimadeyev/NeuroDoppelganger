@@ -118,7 +118,12 @@ def add_mess(chat_id, messages):
 async def in_db(chat_id):
     cur.execute(f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'i{chat_id}');")
     res = cur.fetchall()
-    return res[0][0] == True
+    return len(res) and len(res[0]) and res[0][0] == True
+
+async def in_all_db(chat_id):
+    cur.execute(f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'all{chat_id}');")
+    res = cur.fetchall()
+    return len(res) and len(res[0]) and res[0][0] == True
 
 
 async def count_db(chat_id):
@@ -133,23 +138,25 @@ async def add_chat(new_chat):
     for e in new_chat['messages']:
         if e['type'] != 'service':
             count_new_mes += 1
-    if await in_db(str(new_chat['id'])) and count_new_mes > COLchats + await count_db(new_chat['id']):
-        cur.execute("delete from i{str(new_chat['id'])}")
+    if await in_db(new_chat['id']) and count_new_mes > COLchats + await count_db(new_chat['id']):
+        cur.execute(f"delete from i{str(new_chat['id'])}")
         add_mess(str(new_chat['id']), new_chat['messages'])
         cur.execute(f"delete from get_model_id where chat_id = '{str(new_chat['id'])}'")
 
-        model_id = await add_model(new_chat['id'])  # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
+        model_id = await add_model(chat_id=new_chat['id'])
+        # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
         print(model_id)
         cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
-    elif not await in_db(str(new_chat['id'])):
+    elif not await in_db(new_chat['id']):
         cur.execute(
-            f"create table i{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
-        cur.execute(
-            f"create table all{str(new_chat['id'])} (id int, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply int, mes_date timestamp without time zone);")
+            f"create table i{str(new_chat['id'])} (id text, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply text, mes_date timestamp without time zone);")
+        if not await in_all_db(new_chat['id']):
+            cur.execute(
+                f"create table all{str(new_chat['id'])} (id text, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply text, mes_date timestamp without time zone);")
         conn.commit()
         add_mess(str(new_chat['id']), new_chat['messages'])
         conn.commit()
-        model_id = await add_model(new_chat['id'])  # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
+        model_id = await add_model(chat_id=new_chat['id'])
 
         cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
     conn.commit()
@@ -197,6 +204,9 @@ async def parse(message: types.Message):
         mes_text = message.caption
     mes_text = mes_text.replace("'", "''")
     mes_type = str(mes_type)[12:].lower()
+    if not await in_all_db(chat_id):
+        cur.execute(
+            f"create table all{chat_id} (id text, user_id text, user_name text, full_name text, mes_type text, mes_text text, id_reply text, mes_date timestamp without time zone);")
     cur.execute(
         f"insert into all{chat_id} values ('{mes_id}', '{user_id}', '{user_name}','{full_name}','{mes_type}', '{mes_text}', {id_reply}, '{mes_date}')")
     conn.commit()
