@@ -45,8 +45,7 @@ async def start(message: types.Message):
 
 ImportHistory = []
 user_data = dict()
-
-
+st = dict()
 class NumbersCallbackFactory(CallbackData, prefix="history"):
     action: str
     value: Optional[int] = None
@@ -221,8 +220,23 @@ async def otvet(message: types.Message):
 
 @dp.message()
 async def parse(message: types.Message):
-    conn.commit()
+    if message.chat.id not in st:
+        st[message.chat.id] = set()
+    st[message.chat.id].add(message.from_user.full_name)
+
     chat_id = str(message.chat.id)[4:]
+
+    k = random.randint(1, 3)
+    user = random.sample(list(st[message.chat.id]), 1)
+    if '@' in message.text:
+        usern = message.text.split('@')[1]
+        usern = usern.split()[0]
+        if usern == 'NeuroDoppelgangerBot':
+            k = 3
+    elif message.reply_to_message:
+        if message.reply_to_message.from_user.id == 7992460868:
+            k = 3
+    conn.commit()
     mes_id = message.message_id
     user_id = 'user' + str(message.from_user.id)
     user_name = str(message.from_user.username)
@@ -249,9 +263,8 @@ async def parse(message: types.Message):
         f"insert into all{chat_id} values ('{mes_id}', '{user_id}', '{user_name}','{full_name}','{mes_type}', '{mes_text}', {id_reply}, '{mes_date}')")
     conn.commit()
     await asyncio.sleep(2)
-    k = random.randint(1, 3)
-    text = get_response(chat_id, full_name)
-    if (k == 3 and text):
+    text = get_response(chat_id, user)
+    if k == 3 and text:
         await message.answer(text)
 
 
