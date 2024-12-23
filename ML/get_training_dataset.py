@@ -38,8 +38,8 @@ def modify_chat(chat):
 
     return modified_chat, by_id
 
-def get_dataset(chat_id: int, only_active_users: bool = True) -> list:
-    chat = asyncio.run(get_messages(chat_id))
+async def get_dataset(chat_id: int, only_active_users: bool = True) -> list:
+    chat = await get_messages(chat_id)
     modified_chat, by_id = modify_chat(chat)
 
     user_messages_count = dict()

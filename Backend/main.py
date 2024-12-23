@@ -13,6 +13,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from config import dialogsHistory, LENdialoges, COLchats
 from DB.db import parse_chat
+from ML.ml import get_response
 from tqdm import tqdm
 from dotenv import load_dotenv
 from ML.ml import add_model
@@ -199,6 +200,8 @@ async def parse(message: types.Message):
     cur.execute(
         f"insert into all{chat_id} values ('{mes_id}', '{user_id}', '{user_name}','{full_name}','{mes_type}', '{mes_text}', {id_reply}, '{mes_date}')")
     conn.commit()
+
+    print(get_response(chat_id, full_name))
 
 
 async def main():

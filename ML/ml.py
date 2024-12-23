@@ -53,16 +53,16 @@ def tune_model(dataset_id, temperature, max_tokens) -> str:
     result_uri = tuned_model.uri
     return result_uri
 
-def add_model(chat_id: int, temperature=None, max_tokens=None):
+async def add_model(chat_id: int, temperature=None, max_tokens=None):
     # print("1")
-    dataset = get_dataset(chat_id)
+    dataset = await get_dataset(chat_id)
     with jsonlines.open("data_to_train/train.jsonlines", mode="w") as f:
         for row in dataset:
             f.write(row)
 
     ds_hash = str(uuid.uuid4())
 
-    dataset_id = asyncio.run(create_dataset(dataset_name=f"{chat_id}_{ds_hash}"))
+    dataset_id = await create_dataset(dataset_name=f"{chat_id}_{ds_hash}")
     print(f"{dataset_id=}")
     model_uri = tune_model(dataset_id, temperature, max_tokens)
     print(f"{model_uri=}")
