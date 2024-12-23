@@ -247,7 +247,7 @@ async def main():
 
 def load():
     for i in range(LENdialoges):
-        ImportHistory.append(FSInputFile(f"ImportHistory/_{i}.png"))
+        ImportHistory.append(FSInputFile(f"Backend/ImportHistory/_{i}.png"))
 
 
 if __name__ == '__main__':
