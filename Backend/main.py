@@ -115,7 +115,7 @@ def add_mess(chat_id, messages):
 
 
 def in_db(chat_id):
-    cur.execute(f"SELECT EXISTS (SELECT *FROM i{chat_id})")
+    cur.execute(f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'i{chat_id}');")
     res = cur.fetchall()
     return res[0][0] == True
 
