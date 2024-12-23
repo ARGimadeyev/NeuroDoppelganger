@@ -203,6 +203,7 @@ async def get_full_name(chat_id, user_name):
 
 @dp.message(Command('otvet'))
 async def otvet(message: types.Message):
+    conn.commit()
     chat_id = str(message.chat.id)[4:]
     if '@' not in message.text:
         full_name = message.text.split('"')[1]
@@ -214,11 +215,13 @@ async def otvet(message: types.Message):
             await message.reply("Напишите правильно")
             return
     text = get_response(chat_id, full_name)
+    conn.commit()
     await message.answer(text)
 
 
 @dp.message()
 async def parse(message: types.Message):
+    conn.commit()
     chat_id = str(message.chat.id)[4:]
     mes_id = message.message_id
     user_id = 'user' + str(message.from_user.id)
@@ -245,10 +248,11 @@ async def parse(message: types.Message):
     cur.execute(
         f"insert into all{chat_id} values ('{mes_id}', '{user_id}', '{user_name}','{full_name}','{mes_type}', '{mes_text}', {id_reply}, '{mes_date}')")
     conn.commit()
+    await asyncio.sleep(2)
     k = random.randint(1, 3)
     text = get_response(chat_id, full_name)
-    if k == 3 and text:
-        await message.reply(text)
+    if (k == 3 and text):
+        await message.answer(text)
 
 
 async def main():

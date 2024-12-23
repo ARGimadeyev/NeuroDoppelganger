@@ -23,8 +23,10 @@ def delete_dataset(dataset_name):
 
 
 def get_last(chat_id: str) -> list:
-    cur.execute(f"SELECT *FROM all{chat_id} ORDER BY id DESC LIMIT {4 * WINDOW_SIZE}")
-    all_mes = cur.fetchall()[::-1]
+    cur.execute(f"SELECT *FROM all{chat_id}")
+    all_mes = cur.fetchall()
+    all_mes = all_mes[max(0, len(all_mes) - 10):]
+    print(all_mes)
     return parse_chat(all_mes)
 
 
@@ -42,6 +44,7 @@ async def create_dataset(dataset_name: str):
     await dataset_draft.upload(upload_timeout=60)
     dataset = None
     while dataset is None:
+        print("1 minute")
         async for ds in async_sdk.datasets.list(name_pattern=dataset_name, status="READY"):
             dataset = ds
             break

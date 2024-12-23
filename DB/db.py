@@ -2,7 +2,6 @@ import psycopg2
 import os
 
 from dotenv import load_dotenv
-
 load_dotenv()
 conn = psycopg2.connect(
     host=os.getenv("HOST"),
@@ -14,13 +13,10 @@ conn = psycopg2.connect(
 )
 cur = conn.cursor()
 
-
 def in_db(chat_id):
-    cur.execute(
-        f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'i{chat_id}');")
+    cur.execute(f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'i{chat_id}');")
     res = cur.fetchall()
     return len(res) and len(res[0]) and res[0][0] == True
-
 
 def count_db(chat_id):
     if in_db(chat_id):
@@ -29,7 +25,6 @@ def count_db(chat_id):
         conn.commit()
         return res[0][0]
     return 0
-
 
 def parse_chat(all_mes) -> list:
     res = list()
@@ -46,13 +41,11 @@ def parse_chat(all_mes) -> list:
         res.append(b)
     return res
 
-
 async def get_messages(chat_id):
     cur.execute(f"select *from i{chat_id}")
     all_mes = cur.fetchall()
     conn.commit()
     return parse_chat(all_mes)
-
 
 def get_model_id(chat_id):
     cur.execute(f"select model_id from get_model_id where chat_id = '{chat_id}'")
@@ -62,6 +55,5 @@ def get_model_id(chat_id):
         return res[0][0]
     else:
         return 'gpt://b1gkunod3dtj94p8vu0n/yandexgpt-lite/latest@tamr3ve9m4i159urv6mmt'
-
 
 conn.commit()

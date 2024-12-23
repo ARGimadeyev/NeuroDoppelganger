@@ -4,22 +4,19 @@ from DB.db import get_messages
 from Backend.config import MIN_MESSAGE_THRESHOLD, WINDOW_SIZE, MAX_MESSAGE_DELAY
 import asyncio
 
-
 def get_case(window, chat: list, by_id: dict, user: str = None) -> dict:
     case = dict()
     task = "Ты участвуешь в переписке ниже и должен отвечать от имени людей, чтобы это выглядело естественно. Полностью копируй их манеру речи."
     chat_text: str = ""
     for elem in window:
-        if elem == window[-1]: break
         chat_text += f"[Сообщение от {elem["full_name"]}"
         if elem["id_reply"] and by_id.get(elem["id_reply"]):
             chat_text += f", ответ на сообщение: {chat[by_id[elem["id_reply"]]]["mes_text"]}"
         chat_text += f"] {elem["mes_text"]}\n"
-
+        if elem == window[-1]: break
     if user is None:
         user = window[-1]["full_name"]
-    case["request"] = [{"role": "system", "text": f"{task}\n\n{chat_text}"},
-                       {"role": "user", "text": f"Ответь от лица {user}"}]
+    case["request"] = [{"role": "system", "text": f"{task}\n\n{chat_text}"}, {"role": "user", "text": f"Ответь на последнее сообщение в диалоге от лица {user}"}]
     case["response"] = window[-1]["mes_text"]
     return case
 
@@ -39,7 +36,6 @@ def modify_chat(chat):
         by_id[message["id"]] = len(modified_chat) - 1
 
     return modified_chat, by_id
-
 
 async def get_dataset(chat_id: str, only_active_users: bool = True) -> list:
     chat = await get_messages(chat_id)
