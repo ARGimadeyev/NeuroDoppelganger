@@ -53,7 +53,7 @@ def get_dataset(chat_id: int, only_active_users: bool = True) -> list:
     window = deque(maxlen=WINDOW_SIZE)
 
     for message in modified_chat:
-        while len(window) > WINDOW_SIZE:
+        while len(window) >= WINDOW_SIZE:
             window.popleft()
         window.append(message)
         if user_messages_count[window[-1]["full_name"]] >= MIN_MESSAGE_THRESHOLD or not only_active_users:
