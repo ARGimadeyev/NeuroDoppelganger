@@ -1,4 +1,5 @@
 import asyncio
+import random
 import json
 import logging, os
 from typing import Optional
@@ -203,7 +204,8 @@ async def otvet(message: types.Message):
         except:
             await message.reply("Напишите правильно")
             return
-    print(get_response(chat_id, full_name))
+    text = get_response(chat_id, full_name)
+    await message.answer(text)
 
 @dp.message()
 async def parse(message: types.Message):
@@ -233,8 +235,10 @@ async def parse(message: types.Message):
     cur.execute(
         f"insert into all{chat_id} values ('{mes_id}', '{user_id}', '{user_name}','{full_name}','{mes_type}', '{mes_text}', {id_reply}, '{mes_date}')")
     conn.commit()
-
-    print(get_response(chat_id, full_name))
+    k = random.randint(1,3)
+    text = get_response(chat_id, full_name)
+    if (k == 3 and text):
+        await message.reply(text)
 
 
 async def main():
