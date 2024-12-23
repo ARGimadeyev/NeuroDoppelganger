@@ -86,6 +86,7 @@ async def history(call: types.CallbackQuery, callback_data: NumbersCallbackFacto
     else:
         await UpdateReplic(call.message, user_data[call.from_user.id])
 
+
 def add_mess(chat_id, messages):
     for u in tqdm(range(len(messages))):
         mes = messages[u]
@@ -103,7 +104,8 @@ def add_mess(chat_id, messages):
         if b:
             b = b.replace("'", "''")
         if len(b) == 0: continue
-        cur.execute(f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}','{user_name}', '{full_name}','text', '{b}',{id_reply}, '{mes['date']}')")
+        cur.execute(
+            f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}','{user_name}', '{full_name}','text', '{b}',{id_reply}, '{mes['date']}')")
         if is_photo != '-':
             continue
         if mes['text'] == '' and mes['media_type'] == 'sticker':
@@ -114,16 +116,20 @@ def add_mess(chat_id, messages):
             if b:
                 b = b.replace("'", "''")
             if len(b) == 0: continue
-            cur.execute(f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{b}', {id_reply}, '{mes['date']}')")
+            cur.execute(
+                f"INSERT INTO i{chat_id} VALUES ('{mes['id']}', '{mes['from_id']}', '{user_name}','{full_name}','{mes['media_type']}', '{b}', {id_reply}, '{mes['date']}')")
 
 
 async def in_db(chat_id):
-    cur.execute(f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'i{chat_id}');")
+    cur.execute(
+        f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'i{chat_id}');")
     res = cur.fetchall()
     return len(res) and len(res[0]) and res[0][0] == True
 
+
 async def in_all_db(chat_id):
-    cur.execute(f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'all{chat_id}');")
+    cur.execute(
+        f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'all{chat_id}');")
     res = cur.fetchall()
     return len(res) and len(res[0]) and res[0][0] == True
 
@@ -134,6 +140,7 @@ async def count_db(chat_id):
         res = cur.fetchall()
         return res[0][0]
     return 0
+
 
 async def add_chat(new_chat):
     count_new_mes = 0
@@ -185,12 +192,14 @@ async def read(message: types.Message):
     except Exception as e:
         await message.answer(f"Произошла ошибка при чтении файла:(\n {e}")
 
+
 async def get_full_name(chat_id, user_name):
     cur.execute(f"select full_name from all{chat_id} where user_name = '{user_name}'")
     res = cur.fetchall()
     if len(res) and len(res[0]):
         return res[0][0]
     return None
+
 
 @dp.message(Command('otvet'))
 async def otvet(message: types.Message):
@@ -206,6 +215,7 @@ async def otvet(message: types.Message):
             return
     text = get_response(chat_id, full_name)
     await message.answer(text)
+
 
 @dp.message()
 async def parse(message: types.Message):
@@ -235,9 +245,9 @@ async def parse(message: types.Message):
     cur.execute(
         f"insert into all{chat_id} values ('{mes_id}', '{user_id}', '{user_name}','{full_name}','{mes_type}', '{mes_text}', {id_reply}, '{mes_date}')")
     conn.commit()
-    k = random.randint(1,3)
+    k = random.randint(1, 3)
     text = get_response(chat_id, full_name)
-    if (k == 3 and text):
+    if k == 3 and text:
         await message.reply(text)
 
 

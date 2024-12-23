@@ -39,17 +39,13 @@ async def create_dataset(dataset_name: str):
         upload_format="jsonlines",
         name=dataset_name,
     )
-    print("2")
     await dataset_draft.upload(upload_timeout=60)
-    print("2")
     dataset = None
     while dataset is None:
-        print("52")
         async for ds in async_sdk.datasets.list(name_pattern=dataset_name, status="READY"):
             dataset = ds
             break
         await asyncio.sleep(60)
-    print("2")
     return dataset.id
 
 
@@ -97,4 +93,3 @@ def get_response(chat_id, user):
     result = model.run(prompt)
     response = result.alternatives[0].text
     return response
-
