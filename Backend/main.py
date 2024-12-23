@@ -115,9 +115,9 @@ def add_mess(chat_id, messages):
 
 
 def in_db(chat_id):
-    cur.execute(f"select *from get_model_id where chat_id = '{chat_id}'")
+    cur.execute(f"SELECT EXISTS (SELECT *FROM i{chat_id})")
     res = cur.fetchall()
-    return len(res)
+    return res[0][0] == True
 
 
 def count_db(chat_id):
@@ -126,8 +126,6 @@ def count_db(chat_id):
         res = cur.fetchall()
         return res[0][0]
     return 0
-
-
 
 async def add_chat(new_chat):
     count_new_mes = 0
