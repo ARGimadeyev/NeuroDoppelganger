@@ -4,6 +4,7 @@ import uuid
 import pathlib
 import asyncio
 import jsonlines
+from aiogram.enums import ParseMode
 
 from ML.get_training_dataset import get_dataset, modify_chat, get_case
 from yandex_cloud_ml_sdk import YCloudML, AsyncYCloudML
@@ -62,7 +63,7 @@ async def tune_model(dataset_id, temperature=None, max_tokens=None) -> str:
     return result_uri
 
 
-async def add_model(chat_id: str, temperature=None, max_tokens=None):
+async def add_model(chat_id: str, bot, temperature=None, max_tokens=None):
     dataset = await get_dataset(chat_id)
     with jsonlines.open(
             "ML/data_to_train/train.jsonlines",
@@ -76,6 +77,7 @@ async def add_model(chat_id: str, temperature=None, max_tokens=None):
     print(f"{dataset_id=}: {datetime.now()}")
     model_uri = await tune_model(dataset_id, temperature, max_tokens)
     print(f"{model_uri=}: {datetime.now()}")
+    await bot.send_message(chat_id=chat_id, text="ваша модель готова", parse_mode=ParseMode.HTML)
 
     delete_dataset(dataset_name)
 

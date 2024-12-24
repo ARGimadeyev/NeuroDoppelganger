@@ -163,7 +163,7 @@ async def add_chat(new_chat):
         add_mess(str(new_chat['id']), new_chat['messages'])
         cur.execute(f"delete from get_model_id where chat_id = '{str(new_chat['id'])}'")
 
-        model_id = await add_model(chat_id=new_chat['id'])
+        model_id = await add_model(chat_id=new_chat['id'],bot=bot)
         # в этой строке Антон выгружает переписку из БД, затем по ней нужно получить model_id
         print(model_id)
         cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
@@ -176,7 +176,7 @@ async def add_chat(new_chat):
         conn.commit()
         add_mess(str(new_chat['id']), new_chat['messages'])
         conn.commit()
-        model_id = await add_model(chat_id=new_chat['id'])
+        model_id = await add_model(chat_id=new_chat['id'],bot=bot)
 
         cur.execute(f"insert into get_model_id values ({str(new_chat['id'])}, '{model_id}')")
     conn.commit()
@@ -253,7 +253,7 @@ async def parse(message: types.Message):
     if message.chat.id not in st:
         st[message.chat.id] = {"Нейродвойник😎"}
 
-    k = random.randint(1, 5)
+    k = random.randint(1, 6)
 
     st[message.chat.id].discard(message.from_user.full_name)
     user = random.sample(list(st[message.chat.id]), 1)[0]
