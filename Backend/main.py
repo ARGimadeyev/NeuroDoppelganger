@@ -40,7 +40,15 @@ cur = conn.cursor()
 @dp.message(Command('start'))
 async def start(message: types.Message):
     await message.reply(
-        f"Привет, {message.from_user.full_name}!\nЧтобы создать своего нейродвойника для чата напишите /newbot")
+        f"""Привет, {message.from_user.full_name}!\n Я <b>DoppelBot</b> — ваш нейродвойник!  
+Я помогу сделать переписку интереснее и живее. Чтобы всё заработало, сделайте меня администратором группы перед началом!  
+
+<b>Что я умею</b>:  
+- /start — запускает бота. Лучше использовать в группе 🤟.  
+- /newbot — создаёт нейродвойника для вашей группы 👻.  
+- /answer — бот отвечает за указанного участника. Укажите @тег или имя человека, и я всё устрою!  
+
+Добавьте меня в группу и доверьтесь магии общения!""", parse_mode=ParseMode.HTML)
 
 
 ImportHistory = []
@@ -65,14 +73,16 @@ async def get_keyboard(indx: int):
 
 
 async def UpdateReplic(message: types.Message, indx: int):
-    await message.edit_media(InputMediaPhoto(media=ImportHistory[indx], caption=dialogsHistory[indx]),
-                             reply_markup=await get_keyboard(indx))
+    await message.edit_media(
+        InputMediaPhoto(media=ImportHistory[indx], caption=dialogsHistory[indx], parse_mode=ParseMode.HTML),
+        reply_markup=await get_keyboard(indx))
 
 
 @dp.message(Command('newbot'))
 async def newbot(message: types.Message):
     user_data[message.from_user.id] = 0
-    await message.answer_photo(photo=ImportHistory[0], caption=dialogsHistory[0], reply_markup=await get_keyboard(0))
+    await message.answer_photo(photo=ImportHistory[0], caption=dialogsHistory[0], reply_markup=await get_keyboard(0),
+                               parse_mode=ParseMode.HTML)
 
 
 @dp.callback_query(NumbersCallbackFactory.filter())
@@ -202,23 +212,36 @@ async def get_full_name(chat_id, user_name):
     return None
 
 
-@dp.message(Command('otvet'))
+@dp.message(Command('answer'))
 async def otvet(message: types.Message):
     conn.commit()
     chat_id = str(message.chat.id)[4:]
     if '@' not in message.text:
-        full_name = message.text.split('"')[1]
-    else:
-        username = message.text.split()[1][1:]
         try:
+            full_name = message.text.split('"')[1]
+        except:
+            await message.reply("Напишите правильно")
+            return
+    else:
+        try:
+            username = message.text.split()[1][1:]
             full_name = await get_full_name(chat_id, username)
         except:
             await message.reply("Напишите правильно")
             return
-    text = get_response(chat_id, full_name)
+    if full_name is None:
+        await message.reply("Напишите правильно")
+        return
+
     conn.commit()
-    text = get_response(chat_id, full_name)
+    try:
+        text = get_response(chat_id, full_name)
+    except:
+        await message.answer("Вы еще не загружали историю этого чата/группы")
+        return
     text = text.replace("@NeuroDoppelgangerBot", "")
+    text = text.replace("/start", "")
+    text = text.replace("/newbot", "")
     if text:
         await message.reply(text + f'\n<b>{full_name}</b>', parse_mode=ParseMode.HTML)
 
@@ -227,16 +250,15 @@ async def otvet(message: types.Message):
 async def parse(message: types.Message):
     chat_id = str(message.chat.id)[4:]
 
-
     if message.chat.id not in st:
         st[message.chat.id] = {"Нейродвойник😎"}
-    k = random.randint(1, 5)
 
+    k = random.randint(1, 5)
 
     st[message.chat.id].discard(message.from_user.full_name)
     user = random.sample(list(st[message.chat.id]), 1)[0]
-    print(list(st[message.chat.id]))
     st[message.chat.id].add(message.from_user.full_name)
+
     if '@' in message.text:
         usern = message.text.split('@')[1]
         usern = usern.split()[0]
@@ -245,6 +267,7 @@ async def parse(message: types.Message):
     elif message.reply_to_message:
         if message.reply_to_message.from_user.id == 7992460868:
             k = 3
+
     conn.commit()
     mes_id = message.message_id
     user_id = 'user' + str(message.from_user.id)
@@ -272,11 +295,17 @@ async def parse(message: types.Message):
         f"insert into all{chat_id} values ('{mes_id}', '{user_id}', '{user_name}','{full_name}','{mes_type}', '{mes_text}', {id_reply}, '{mes_date}')")
     conn.commit()
     await asyncio.sleep(2)
-    if user =="Нейродвойник😎":
+
+    if user is None:
+        user = "Нейродвойник😎"
+
+    if user == "Нейродвойник😎":
         text = get_response(chat_id, full_name)
     else:
         text = get_response(chat_id, user)
     text = text.replace("@NeuroDoppelgangerBot", "")
+    text = text.replace("/start", "")
+    text = text.replace("/newbot", "")
     if k == 3 and text:
         await message.reply(text + f'\n<b>{user}</b>', parse_mode=ParseMode.HTML)
 
